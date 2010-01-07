@@ -1,0 +1,205 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "#include ""veroverrides.h""\r\n"
+    "#include ""maxversion.r""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_CHECK               ICON                    "check.ico"
+IDI_SUBMENUSEL          ICON                    "submenusel.ico"
+IDI_SUBMENU             ICON                    "submenu.ico"
+IDI_CHECKSEL            ICON                    "checksel.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+-7872 VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", " diego@blur.com | diegogh@sloft.com"
+            VALUE "CompanyName", "Blur Studio"
+            VALUE "FileDescription", "BlurDLX Dynamic Link Library"
+            VALUE "FileVersion", "1, 0, 0, 1"
+            VALUE "InternalName", "BlurDLX"
+            VALUE "LegalCopyright", "Copyright (C) 2006"
+            VALUE "OriginalFilename", "BlurDLX.dll"
+            VALUE "ProductName", " BlurDLX Dynamic Link Library"
+            VALUE "ProductVersion", "1, 0, 0, 1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 158
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT DIALOGEX 0, 0, 165, 95
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,7,74,151,14
+    CTEXT           "All Rights Reserved",IDC_STATIC,72,41,76,8
+    CTEXT           "www.blur.com",IDC_BLURLINK2,72,50,76,8,SS_NOTIFY
+    CTEXT           "software@blur.com",IDC_BLURLINK3,72,61,76,10,SS_NOTIFY
+    CTEXT           "Diego Garcia Huerta",IDC_STATIC,72,28,76,8
+    CTEXT           "BlurDLX",IDC_PLUGNAME,6,6,152,18,0,WS_EX_STATICEDGE
+    CONTROL         2,IDC_BLURPIC,"Static",SS_BITMAP | SS_NOTIFY | 
+                    SS_REALSIZEIMAGE,14,28,45,42,WS_EX_TRANSPARENT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BLURLOGO            BITMAP                  "blurlogo.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_SPINNER_TYPE_MUST_BE_INTEGER_OR_FLOAT 
+                            "Spinner type must be an Integer or Float"
+    IDS_SPINNER_RANGE_MUST_BE_A_VECTOR "Spinner range must be a Vector"
+    IDS_LIBDESCRIPTION      "Blur MAXscript Functions"
+    IDS_CANNOT_DIRECTLY_SET_CHILDREN_ARRAY 
+                            "Cannot directly set children array"
+    IDS_CANNOT_DIRECTLY_SET_HWND "Cannot directly set HWND property"
+    IDS_CANNOT_DIRECTLY_SET_TVCONTROL 
+                            "Cannot directly set TreeViewControl property"
+    IDS_CANNOT_DIRECTLY_SET_NODE "Cannot directly set Node property"
+    IDS_SORT_ARG_NOT_FN2    "Type error: compare function requires MAXScriptFunction, got: "
+    IDS_SORT_ARG_NOT_FN     "addNodeScript function requires MAXScriptFunction, got: "
+    IDS_MIN_AND_MAX_VALUES_MUST_BE_POINT3 
+                            "Type error:Minimum and maximum requires point3vValues"
+    IDS_FUNC_NEED_ARG_OF_TYPE "The function needed argument of type: #"
+    IDS_FUNC_GOT_ARG_OF_TYPE ", got: "
+    IDS_VAL_YES             "True"
+    IDS_VAL_NO              "False"
+    IDS_ARRAY_INDEX_MUST_BE_VE_NUMBER_GOT 
+                            "array index must be +ve number, got: "
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_ADDNODE_ARGUMENT_MISMATCH 
+                            "addNode requires a Document Value or an Element value as a first parameter, got: "
+    IDS_CANNOT_SET_DICT_PROPERTIES "Cannot directly set dictionary properties"
+    IDS_CYCLIC_REF          "Cyclic reference... Cannot assign dictionary as value of the same dictionary, got:"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+#include "veroverrides.h"
+#include "maxversion.r"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
