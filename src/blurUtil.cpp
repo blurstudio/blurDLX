@@ -62,6 +62,7 @@
 #include "ILayerProperties.h"
 #include "ilayer.h"
 #include "ilayermanager.h"
+#include "3DMath.h"
 
 #include "maxmats.h"
 
@@ -456,6 +457,8 @@ def_struct_primitive( refByUniqueName,		blurUtil,		"refByUniqueName" );
 def_struct_primitive( uniqueId,				blurUtil,		"uniqueId" );
 
 // Windows Methods
+def_struct_primitive( controlSize,			blurUtil,		"controlSize" );
+def_struct_primitive( setControlSize,		blurUtil,		"setControlSize" );
 def_struct_primitive( getWindowText,		blurUtil,		"getWindowText" );
 def_struct_primitive( maximizeWindow,		blurUtil,		"maximizeWindow" );
 def_struct_primitive( minimizeWindow,		blurUtil,		"minimizeWindow" );
@@ -464,6 +467,42 @@ def_struct_primitive( setClipboardData,		blurUtil,		"setClipboardData");
 def_struct_primitive( setWindowOnTop,		blurUtil,		"setWindowOnTop");
 def_struct_primitive( setWindowText,		blurUtil,		"setWindowText" );
 def_struct_primitive( showWindow,			blurUtil,		"showWindow" );
+
+Value*		controlSize_cf( Value** arg_list, int arg_count ) {
+	check_arg_count( blurUtil.controlSize, 1, arg_count );
+
+	one_value_local( result );
+
+	if ( is_rolloutcontrol( arg_list[0] ) ) {
+		RolloutControl* control = (RolloutControl*) arg_list[0];
+		HWND hwnd = GetDlgItem( control->parent_rollout->page, control->control_ID );
+		RECT rect;
+		GetWindowRect( hwnd, &rect );
+		vl.result = (Value*) new Point2Value( rect.right - rect.left, rect.bottom - rect.top );
+	}
+
+	return_value( vl.result );
+}
+
+Value*		setControlSize_cf( Value** arg_list, int arg_count ) {
+	check_arg_count( blurUtil.setControlSize, 2, arg_count );
+
+	if ( is_rolloutcontrol( arg_list[0] ) && is_point2( arg_list[1] ) ) {
+		RolloutControl* control = (RolloutControl*) arg_list[0];
+		Point2 size				= arg_list[1]->to_point2();
+
+		HWND hwnd = GetDlgItem( control->parent_rollout->page, control->control_ID );
+		RECT rect;
+		GetWindowRect( hwnd, &rect );
+		MapWindowPoints( NULL, control->parent_rollout->page, (LPPOINT)&rect, 2 );
+		SetWindowPos( hwnd, NULL, rect.left, rect.top, size.x, size.y, SWP_NOZORDER );
+
+		
+
+		return &true_value;
+	}
+	return &false_value;
+}
 
 // ------------------------------------------------------------------------------------------------------
 
