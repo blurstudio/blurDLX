@@ -198,7 +198,7 @@ END
 //
 
 #include "veroverrides.h"
-#include "maxversion.r"
+//#include "maxversion.r"
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED

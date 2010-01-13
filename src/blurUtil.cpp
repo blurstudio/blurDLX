@@ -62,7 +62,8 @@
 #include "ILayerProperties.h"
 #include "ilayer.h"
 #include "ilayermanager.h"
-#include "3DMath.h"
+#include "3dmath.h"
+#include "imtledit.h"
 
 #include "maxmats.h"
 
@@ -116,6 +117,9 @@
 #define MESH_VERTSEL_ALLOWED 1
 #define MESH_FACESEL_ALLOWED 2
 #define MESH_EDGESEL_ALLOWED 3
+
+#define n_caption		Name::intern( "caption" )
+#define n_refresh		Name::intern( "refresh" )
 
 // uniqueId
 #define BLURDLX_CLASS_ID	0x000001
@@ -450,6 +454,11 @@ def_struct_primitive( searchAndReplace,		blurUtil,		"searchAndReplace");
 def_struct_primitive( setMaterial,			blurUtil,		"setMaterial" );
 def_struct_primitive( setNames,				blurUtil,		"setNames" );
 
+// Gui Methods
+def_struct_primitive( controlSize,			blurUtil,		"controlSize" );
+def_struct_primitive( setSubRolloutSize,	blurUtil,		"setSubRolloutSize" );
+def_struct_primitive( setControlSize,		blurUtil,		"setControlSize" );
+
 // UniqueId Methods
 def_struct_primitive( genUniqueId,			blurUtil,		"genUniqueId" );
 def_struct_primitive( refByUniqueId,		blurUtil,		"refByUniqueId" );
@@ -457,8 +466,6 @@ def_struct_primitive( refByUniqueName,		blurUtil,		"refByUniqueName" );
 def_struct_primitive( uniqueId,				blurUtil,		"uniqueId" );
 
 // Windows Methods
-def_struct_primitive( controlSize,			blurUtil,		"controlSize" );
-def_struct_primitive( setControlSize,		blurUtil,		"setControlSize" );
 def_struct_primitive( getWindowText,		blurUtil,		"getWindowText" );
 def_struct_primitive( maximizeWindow,		blurUtil,		"maximizeWindow" );
 def_struct_primitive( minimizeWindow,		blurUtil,		"minimizeWindow" );
@@ -468,44 +475,7 @@ def_struct_primitive( setWindowOnTop,		blurUtil,		"setWindowOnTop");
 def_struct_primitive( setWindowText,		blurUtil,		"setWindowText" );
 def_struct_primitive( showWindow,			blurUtil,		"showWindow" );
 
-Value*		controlSize_cf( Value** arg_list, int arg_count ) {
-	check_arg_count( blurUtil.controlSize, 1, arg_count );
-
-	one_value_local( result );
-
-	if ( is_rolloutcontrol( arg_list[0] ) ) {
-		RolloutControl* control = (RolloutControl*) arg_list[0];
-		HWND hwnd = GetDlgItem( control->parent_rollout->page, control->control_ID );
-		RECT rect;
-		GetWindowRect( hwnd, &rect );
-		vl.result = (Value*) new Point2Value( rect.right - rect.left, rect.bottom - rect.top );
-	}
-
-	return_value( vl.result );
-}
-
-Value*		setControlSize_cf( Value** arg_list, int arg_count ) {
-	check_arg_count( blurUtil.setControlSize, 2, arg_count );
-
-	if ( is_rolloutcontrol( arg_list[0] ) && is_point2( arg_list[1] ) ) {
-		RolloutControl* control = (RolloutControl*) arg_list[0];
-		Point2 size				= arg_list[1]->to_point2();
-
-		HWND hwnd = GetDlgItem( control->parent_rollout->page, control->control_ID );
-		RECT rect;
-		GetWindowRect( hwnd, &rect );
-		MapWindowPoints( NULL, control->parent_rollout->page, (LPPOINT)&rect, 2 );
-		SetWindowPos( hwnd, NULL, rect.left, rect.top, size.x, size.y, SWP_NOZORDER );
-
-		
-
-		return &true_value;
-	}
-	return &false_value;
-}
-
-// ------------------------------------------------------------------------------------------------------
-
+// -----------------------------------------------------------------------------------------------------
 // Misc Methods
 Value*		getDuplicateVerts_cf( Value** arg_list, int arg_count ) {
 	/*!---------------------------------------------------------
@@ -582,25 +552,41 @@ Value*		searchAndReplace_cf(Value** arg_list, int count) {
 Value*		setMaterial_cf( Value** arg_list, int count ) {
 	check_arg_count_with_keys (SetNames, 2, count);
 
-	if (!arg_list[0]->is_kind_of(class_tag(Array)))
-		throw RuntimeError (_T("First argument invalid, cannot convert to array"));
+	if (!arg_list[1]->eval()->is_kind_of(class_tag(MAXMaterial)))
+		throw RuntimeError (_T("Cannot convert argument 2 of blurUtil.setMaterial to MAXMaterial"));
 
-	if (!arg_list[1]->is_kind_of(class_tag(MAXMaterial)))
-		throw RuntimeError (_T("Second argument invalid, cannot convert to material"));
+	Mtl* mat			= ((MAXMaterial*)arg_list[1]->eval())->mat;
 
-	Array* nodeArray	= (Array*)arg_list[0];
-	Mtl* mat			= ((MAXMaterial*)arg_list[1])->mat;
+	if ( arg_list[0]->eval()->is_kind_of(class_tag(Array)) ) {
+		Array* nodeArray	= (Array*)arg_list[0]->eval();
+		Interface* ip		= GetCOREInterface();
 
-	GetCOREInterface()->DisableSceneRedraw();
-	for (int j = 0; j < nodeArray->size; j++) {
-		if ( !nodeArray->data[j]->is_kind_of(class_tag(MAXNode)) )
-			continue;
-		
-		INode* node = nodeArray->data[j]->to_node();
-		node->SetMtl( mat );
+		ip->DisableSceneRedraw();
+		ip->BeginProgressiveMode();
+
+		for (int j = 0; j < nodeArray->size; j++) {
+			if ( !nodeArray->data[j]->is_kind_of(class_tag(MAXNode)) )
+				continue;
+			
+			nodeArray->data[j]->to_node()->SetMtl( mat );
+		}
+
+		ip->EndProgressiveMode();
+		ip->EnableSceneRedraw();
 	}
-	GetCOREInterface()->EnableSceneRedraw();
-	GetCOREInterface()->RedrawViews( GetCOREInterface()->GetTime() );
+	else if ( is_node( arg_list[0]->eval() ) ) {
+		Interface* ip		= GetCOREInterface();
+		ip->DisableSceneRedraw();
+		ip->BeginProgressiveMode();
+		
+		arg_list[0]->eval()->to_node()->SetMtl( mat );
+		
+		ip->EndProgressiveMode();
+		ip->EnableSceneRedraw();
+	}
+	else {
+		throw RuntimeError(_T("Cannot convert argument 1 of blurUtil.setMaterial to Array or MAXNode"));
+	}
 
 	return &true_value;
 }
@@ -632,6 +618,108 @@ Value*		setNames_cf( Value** arg_list, int count ) {
 	}
 
 	return nodeArray;
+}
+
+Value*		controlSize_cf( Value** arg_list, int count ) {
+	check_arg_count( controlSize, 1, count );
+
+	if ( !is_rolloutcontrol(arg_list[0]->eval()) )
+		throw RuntimeError (_T("First argument of controlSize needs to be a rollout control."));
+
+	RolloutControl* control	= (RolloutControl*) arg_list[0]->eval();
+	Point2 point;
+	point.x = 0;
+	point.y = 0;
+
+	if ( control->parent_rollout ) {
+		HWND hWnd	= GetDlgItem( control->parent_rollout->page, control->control_ID );
+		RECT rect;
+		GetWindowRect( hWnd, &rect );
+		MapWindowPoints( NULL, control->parent_rollout->page, (LPPOINT)&rect, 2 );
+		point.x	= rect.right - rect.left;
+		point.y	= rect.bottom - rect.top;
+	}
+	one_typed_value_local( Point2Value* out );
+	vl.out = new Point2Value( point );
+	return_value( vl.out );
+}
+Value*		setSubRolloutSize_cf( Value** arg_list, int count ) {
+	check_arg_count( blurUtil.setRolloutSize, 2, count );
+	if ( !is_rollout( arg_list[0]->eval() ) )
+		throw RuntimeError( _T( "First argument of blurUtil.setRolloutSize needs to be a rollout control." ) );
+	if ( !is_point2( arg_list[1]->eval() ) )
+		throw RuntimeError( _T( "Second argument of blurUtil.setRolloutSize needs to be a Point2 value." ) );
+
+	Rollout* control	= (Rollout*) arg_list[0]->eval();
+	Point2Value* size	= (Point2Value*) arg_list[1]->eval();
+	int width			= (int) size->p.x;
+	int height			= (int) size->p.y;
+	
+	HWND hContainer		= GetParent( control->page );
+	HWND hParent		= GetParent( hContainer );
+
+	if ( hContainer && hParent ) {
+		// Update Rollout Sizes
+		control->rollout_width	= width - 12;
+
+		RECT rect;
+		RECT childRect;
+
+		//---------------------------------------------------------------
+		// Update Container Window
+
+		GetWindowRect( hContainer, &rect );
+		MapWindowPoints( NULL, hParent, (LPPOINT) &rect, 2 );
+		SetWindowPos( hContainer, NULL, rect.left, rect.top, width, rect.bottom - rect.top, SWP_NOZORDER );
+
+		//---------------------------------------------------------------
+		// Update Button
+
+		HWND hBtn	= GetDlgItem( hContainer, 0 );
+		GetWindowRect( hBtn, &childRect );
+		MapWindowPoints( NULL, hContainer, (LPPOINT) &childRect, 2 );
+		SetWindowPos( hBtn, NULL, childRect.left, childRect.top, width - 12, childRect.bottom - childRect.top, SWP_NOZORDER );
+
+		//---------------------------------------------------------------
+		// Update Rollout Control
+
+		GetWindowRect( control->page, &childRect );
+		MapWindowPoints( NULL, hContainer, (LPPOINT)&childRect, 2 );
+		SetWindowPos( control->page, NULL, childRect.left, childRect.top, width - 12, childRect.bottom - childRect.top, SWP_NOZORDER );
+		InvalidateRect( control->page, &childRect, TRUE );
+
+		return &true_value;
+	}
+	return &false_value;
+}
+Value*		setControlSize_cf( Value** arg_list, int count ) {
+	check_arg_count_with_keys( setControlSize, 2, count );
+
+	if ( is_rollout( arg_list[0]->eval() ) )
+		return setSubRolloutSize_cf( arg_list, count );
+
+	if ( !is_rolloutcontrol(arg_list[0]->eval()) )
+		throw RuntimeError (_T("First argument of setControlSize needs to be a rollout control."));
+	if ( !is_point2(arg_list[1]->eval()) )
+		throw RuntimeError (_T("Second argument of setControlSize needs to be a Point2 value."));
+	
+	RolloutControl* control = (RolloutControl*) arg_list[0]->eval();
+	Point2Value* size		= (Point2Value*) arg_list[1]->eval();
+	int width				= (int) size->p.x;
+	int height				= (int) size->p.y;
+
+	if ( control->parent_rollout ) {
+		HWND hWnd	= GetDlgItem( control->parent_rollout->page, control->control_ID );
+		RECT rect;
+		GetWindowRect( hWnd, &rect );
+		MapWindowPoints( NULL, control->parent_rollout->page, (LPPOINT)&rect, 2 );
+		SetWindowPos( hWnd, NULL, rect.left, rect.top, width, height, SWP_NOZORDER );
+		if ( key_arg_or_default( refresh, &true_value ) == &true_value ) {
+			InvalidateRect( control->parent_rollout->page, &rect, TRUE );
+		}
+		return &true_value;
+	}
+	return &false_value;
 }
 
 // Unique Id Methods
