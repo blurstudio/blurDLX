@@ -687,6 +687,7 @@ BOOL nc_IsValidElement(TSTR elementInStr, TSTR typeInStr, Struct* NCDefStruct)
 
 	TSTR componentStr = GetValueProperty(NCDefStruct, "componentSpacer")->to_string();
 	TSTR elementClassStr = nc_getElementClassFromType(typeInStr, NCDefStruct);
+	elementClassStr.toLower();		// needed for MAX2010->
 
 	if (elementClassStr.operator ==(_T("text")))
 		return nc_IsValidElementText(elementInStr, NCDefStruct);
@@ -735,6 +736,7 @@ TSTR nc_GetValidElement(TSTR elementInStr, TSTR typeInStr, Struct* NCDefStruct)
 	TSTR elementEmpty = GetValueProperty(NCDefStruct, "elementEmpty")->to_string();
 
 	TSTR elementClassStr = nc_getElementClassFromType(typeInStr, NCDefStruct);
+	elementClassStr.toLower();		// needed for MAX2010->
 
 	if (elementClassStr.operator ==(_T("text")))
 	{
@@ -1376,7 +1378,8 @@ BOOL nc_CheckNamingConvention ( TSTR nameInStr, Struct* NCDefStruct )
 		TSTR typeInStr = GetValueProperty(elementDefArray->data[i], "type")->to_string();
 		TSTR classInStr = GetValueProperty(elementDefArray->data[i], "class")->to_string();
 		TSTR elementStr = elementArray->data[i]->to_string();
-		
+		classInStr.toLower();		// needed for MAX2010->
+
 		if (classInStr.operator == (_T("element")) ) 
 		{
 			if (!nc_IsValidElement(elementStr,typeInStr, NCDefStruct))
@@ -1487,7 +1490,7 @@ TSTR nc_MakeNamingConventionName ( TSTR nameInStr, Struct* NCDefStruct )
 		TSTR typeInStr = GetValueProperty(elementDefArray->data[i], "type")->to_string();
 		TSTR classInStr = GetValueProperty(elementDefArray->data[i], "class")->to_string();
 		TSTR elementStr = elementArray->data[i]->to_string();
-		
+		classInStr.toLower();		// needed for MAX2010->
 		
 		if (classInStr.operator ==(_T("element")))
 		{
@@ -1712,6 +1715,7 @@ Array* nc_GetNamingConventionAsIndexes(TSTR nameInStr, Value* orderElements, Str
 		// get the class and type of the elementDef
 		Value* elementClass = GetValueProperty(elementDef, "class");
 		TSTR elementClassStr = elementClass->to_string();
+		elementClassStr.toLower();		// needed for MAX2010->
 
 		// depending of the class of the element, proceed according to the NC
 		// the text elements should not contain any special character
@@ -1930,6 +1934,7 @@ Value *nc_GetNamingConventionAsIndexes_cf(Value** arg_list, int count)
 		// get the class and type of the elementDef
 		Value* elementClass =  GetValueProperty(elementDef, "class");//elementDefClassArray->data[i];
 		TSTR elementClassStr = elementClass->to_string();
+		elementClassStr.toLower();		// needed for MAX2010->
 
 		// depending of the class of the element, proceed according to the NC
 		// the text elements should not contain any special character
@@ -2166,6 +2171,7 @@ Value* nc_GetNamingConvention_cf(Value** arg_list, int count)
 		// get the class and type of the elementDef
 		Value* elementClass =  GetValueProperty(elementDef, "class");//elementDefClassArray->data[i];
 		TSTR elementClassStr = elementClass->to_string();
+		elementClassStr.toLower();		// needed for MAX2010->
 
 		// depending of the class of the element, proceed according to the NC
 		// the text elements should not contain any special character
