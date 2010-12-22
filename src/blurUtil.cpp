@@ -451,7 +451,7 @@ def_struct_primitive( getDuplicateVerts,	blurUtil,		"getDuplicateVerts");
 def_struct_primitive( getReferenceTarget,	blurUtil,		"getReferenceTarget" );
 def_struct_primitive( intersectTriTri,		blurUtil,		"intersectTriTri" );
 def_struct_primitive( searchAndReplace,		blurUtil,		"searchAndReplace");
-def_struct_primitive( setMaterial,			blurUtil,		"setMaterial" );
+def_struct_primitive( setMaterials,			blurUtil,		"setMaterials" );
 def_struct_primitive( setNames,				blurUtil,		"setNames" );
 
 // Gui Methods
@@ -549,46 +549,45 @@ Value*		searchAndReplace_cf(Value** arg_list, int count) {
 	extern Value* replace_cf( Value** arg_list, int count );
 	return replace_cf( arg_list, count );						// moved into blurString library - see blurString.cpp - EKH 9/18/07
 }
-Value*		setMaterial_cf( Value** arg_list, int count ) {
+Value*		setMaterials_cf( Value** arg_list, int count ) {
 	check_arg_count_with_keys (SetNames, 2, count);
 
-	if (!arg_list[1]->eval()->is_kind_of(class_tag(MAXMaterial)))
-		throw RuntimeError (_T("Cannot convert argument 2 of blurUtil.setMaterial to MAXMaterial"));
+	Value* nodes = arg_list[0]->eval();
+	Value* mtls = arg_list[1]->eval();
 
-	Mtl* mat			= ((MAXMaterial*)arg_list[1]->eval())->mat;
+	if ( !(is_collection(nodes) && is_collection(mtls)) )
+		throw RuntimeError (_T("blurUtil.setMaterials expects 2 arrays, of nodes, and of materials." ));
+	
+	Array* narray = (Array*)nodes;
+	Array* marray = (Array*)mtls;
 
-	if ( arg_list[0]->eval()->is_kind_of(class_tag(Array)) ) {
-		Array* nodeArray	= (Array*)arg_list[0]->eval();
-		Interface* ip		= GetCOREInterface();
+	if ( narray->size != marray->size )
+		throw RuntimeError (_T("blurUtil.setMaterials requires both arrays to be the same size"));
+	
+	int numitems	= narray->size;
+	int success		= 0;
 
-		ip->DisableSceneRedraw();
-		ip->BeginProgressiveMode();
+	theHold.Suspend();
+	theHold.DisableUndo();
 
-		for (int j = 0; j < nodeArray->size; j++) {
-			if ( !nodeArray->data[j]->is_kind_of(class_tag(MAXNode)) )
-				continue;
-			
-			nodeArray->data[j]->to_node()->SetMtl( mat );
-		}
+	Interface* ip = GetCOREInterface();
 
-		ip->EndProgressiveMode();
-		ip->EnableSceneRedraw();
-	}
-	else if ( is_node( arg_list[0]->eval() ) ) {
-		Interface* ip		= GetCOREInterface();
-		ip->DisableSceneRedraw();
-		ip->BeginProgressiveMode();
-		
-		arg_list[0]->eval()->to_node()->SetMtl( mat );
-		
-		ip->EndProgressiveMode();
-		ip->EnableSceneRedraw();
-	}
-	else {
-		throw RuntimeError(_T("Cannot convert argument 1 of blurUtil.setMaterial to Array or MAXNode"));
+	Value *n = NULL;
+	Value *m = NULL;
+	for (int j = 0; j < numitems; j++) {
+		n = narray->data[j];
+		m = marray->data[j];
+		if ( !(n->is_kind_of(class_tag(MAXNode)) && m->is_kind_of(class_tag(MAXMaterial))) )
+			continue;
+
+		n->to_node()->SetMtl( m->to_mtl() );
+		success += 1;
 	}
 
-	return &true_value;
+	theHold.EnableUndo();
+	theHold.Resume();
+
+	return Integer::intern(success);
 }
 Value*		setNames_cf( Value** arg_list, int count ) {
 	check_arg_count_with_keys (SetNames, 2, count);
