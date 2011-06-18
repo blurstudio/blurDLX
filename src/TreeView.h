@@ -119,7 +119,11 @@ public:
 
 	void     set_enable();
 
-#include "defimpfn.h"
+	#ifdef __MAXSCRIPT_2012__
+	#include "maxscript\macros\define_implementations.h"
+	#else
+	#include "defimpfn.h"
+	#endif
 	def_generic		( get_props,	"getPropNames" );
 	def_generic		( show_props,	"showProperties" );
 	def_visible_generic ( show_methods, "showMethods");
@@ -172,7 +176,11 @@ public:
 
 	Value*		applyMethod( Value* methodID, Value** arg_list, int count, CallContext* cc );
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_implementations.h"
+#else
 #include "defimpfn.h"
+#endif
 	def_generic		( get_props,	"getPropNames" );
 	def_generic		( show_props,	"showProperties" );
 	def_visible_generic ( show_methods, "showMethods");

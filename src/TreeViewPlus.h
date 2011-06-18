@@ -249,7 +249,11 @@ class TreeViewItemPlus : public AppliedValue {
 
 		Value*				applyMethod( Value* methodID, Value** arg_list, int count, CallContext* cc );
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_implementations.h"
+#else
 #include "defimpfn.h"
+#endif
 		def_generic		( lt,			"<" );
 		def_generic		( gt,			">" );
 //		def_generic(		get_props,		"getPropNames" );

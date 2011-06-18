@@ -8,12 +8,22 @@
 	\author		Company: Blur Studio
 	\date		05/01/07
 */
+// max 2012 switched the name of maxscript includes
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\maxscript.h"
+#include "maxscript\util\listener.h"
+#include "maxscript\foundation\numbers.h"
+#include "maxscript\maxwrapper\maxclasses.h"
+#include "maxscript\foundation\arrays.h"
+#include "maxscript\foundation\functions.h"
+#else
 #include "MAXScrpt.h"
 #include "Listener.h"
 #include "Numbers.h"
 #include "MAXclses.h"
 #include "arrays.h"
 #include "funcs.h"
+#endif
 
 #include <list>
 
@@ -25,10 +35,20 @@
 #include "ClassDef.h"
 
 // external name definitions
+// max 2012 switched the name of maxscript includes
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_external_functions.h"
+#else
 #include "defextfn.h"
+#endif
 
 // internal name definitions
+// max 2012 switched the name of maxscript includes
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_instantiation_functions.h"
+#else
 #include "definsfn.h"
+#endif
 
 #define			n___add__										( Name::intern( _T( "__add__" ) ) )
 #define			n___baseclass__									( Name::intern( _T( "__baseclass__" ) ) )

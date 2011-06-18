@@ -1,7 +1,12 @@
 #ifndef		__BLURBITMAP_H__
 #define		__BLURBITMAP_H__
 
+// max 2012 switched the name of maxscript includes
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\maxscript.h"
+#else
 #include "MAXScrpt.h"
+#endif
 #include "GenericMethod.h"
 #include "tab.h"
 

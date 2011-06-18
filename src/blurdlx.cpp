@@ -54,8 +54,12 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 //*****************************************************************************
 
-
+// max 2012 switched the name of maxscript includes
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\maxscript.h"
+#else
 #include "MAXScrpt.h"
+#endif
 
 #pragma comment(lib, "comctl32.lib")
 

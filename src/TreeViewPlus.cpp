@@ -1,3 +1,15 @@
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\maxscript.h"
+#include "maxscript\maxwrapper\mxsobjects.h"
+#include "maxscript\foundation\numbers.h"
+#include "maxscript\foundation\colors.h"
+#include "maxscript\foundation\structs.h"
+#include "maxscript\compiler\parser.h"
+
+#include "maxscript\UI\rollouts.h"
+
+#include "maxscript\maxwrapper\mxsmaterial.h"
+#else
 #include "MAXScrpt.h"
 #include "MAXObj.h"
 #include "Numbers.h"
@@ -6,9 +18,10 @@
 #include "Parser.h"
 
 #include "rollouts.h"
-#include "MaxIcon.h"
 
 #include "MAXMats.h"
+#endif
+#include "MaxIcon.h"
 
 extern HINSTANCE		g_hInst;
 extern COLORREF			DarkenColour(COLORREF col, double factor);
@@ -35,11 +48,15 @@ extern INode*			_get_valid_node(MAXNode* _node, TCHAR* errmsg);
 
 static WNDPROC		lpfnWndProc = NULL;			// original wndproc for the tree view
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_external_functions.h"
+#include "maxscript\macros\define_instantiation_functions.h"
+#else
 // external name definitions
 #include "defextfn.h"
-
 // internal name definitions
 #include "definsfn.h"
+#endif
 
 #define				n_addChild					(Name::intern(_T("addChild")))
 #define				n_addItem					(Name::intern(_T("addItem")))

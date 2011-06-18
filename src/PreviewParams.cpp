@@ -43,13 +43,21 @@
 				POSSIBILITY OF SUCH DAMAGE.
 */
 
-
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\maxscript.h"
+#include "maxscript\UI\rollouts.h"
+#include "maxscript\foundation\numbers.h"
+#include "maxscript\foundation\3dmath.h"
+#include "maxscript\maxwrapper\mxsobjects.h"
+#include "maxscript\maxwrapper\maxclasses.h"
+#else
 #include "MAXScrpt.h"
 #include "Rollouts.h"
 #include "Numbers.h"
 #include "3DMath.h"
 #include "MAXObj.h"
 #include "MAXclses.h"
+#endif
 
 #ifdef ScripterExport
 	#undef ScripterExport
@@ -58,11 +66,19 @@
 
 #include "PreviewParams.h"
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_external_functions.h"
+#else
 #include "defextfn.h"
+#endif
 	def_name ( previewparams )
 /*#	include "namedefs.h"*/
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_instantiation_functions.h"
+#else
 #include "definsfn.h"
+#endif
 	def_name ( previewparams )
 	def_name ( outputType )
 	def_name ( pctSize )
@@ -333,7 +349,11 @@ Value* MakePreview_cf(Value** arg_list, int count)
 
 void PreviewParamsInit()
 {
+	#ifdef __MAXSCRIPT_2012__
+	#include "maxscript\macros\define_implementations.h"
+	#else
 	#include "defimpfn.h"
+	#endif
 		def_name ( previewparams )
 		def_name ( outputType )
 		def_name ( pctSize )

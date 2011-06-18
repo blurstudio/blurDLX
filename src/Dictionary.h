@@ -45,7 +45,12 @@
 #ifndef __DICTIONARY_H__
 #define __DICTIONARY_H__
 
+// max 2012 switched the name of maxscript includes
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\maxscript.h"
+#else
 #include "MAXScrpt.h"
+#endif
 #include "GenericMethod.h"
 #include <hash_map>
 
@@ -95,7 +100,12 @@ class Dictionary : public AppliedValue {
 		Value*				map(node_map& m);
 		Value*				set_property( Value** arg_list, int count );
 
+	// max 2012 switched the name of maxscript includes
+	#ifdef __MAXSCRIPT_2012__
+	#include "maxscript\macros\define_implementations.h"
+	#else
 	#include "defimpfn.h"
+	#endif
 		def_generic  ( get,		"get"); 
 		def_generic  ( put,		"put");
 		def_generic  ( show_props, "showProperties");

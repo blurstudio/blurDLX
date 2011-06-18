@@ -44,18 +44,33 @@
 */
 
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\maxscript.h"
+#include "maxscript\foundation\numbers.h"
+#include "maxscript\maxwrapper\mxsobjects.h"
+#include "maxscript\maxwrapper\maxclasses.h"
+#else
 #include "MAXScrpt.h"
 #include "Numbers.h"
 #include "MAXObj.h"
 #include "MAXclses.h"
+#endif
 
 #include "GenericMethod.h"
 
 // external name definitions
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_external_functions.h"
+#else
 #include "defextfn.h"
+#endif
 
 // internal name definitions
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_instantiation_functions.h"
+#else
 #include "definsfn.h"
+#endif
 
 AppliedValue::AppliedValue() {
 }

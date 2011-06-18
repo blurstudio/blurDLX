@@ -43,10 +43,17 @@
 				POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\maxscript.h"
+#include "maxscript\foundation\numbers.h"
+#include "maxscript\maxwrapper\maxclasses.h"
+#include "maxscript\foundation\strings.h"
+#else
 #include "MAXScrpt.h"
 #include "Numbers.h"
 #include "MAXclses.h"
 #include "strings.h"
+#endif
 
 #ifdef ScripterExport
 	#undef ScripterExport
@@ -55,11 +62,16 @@
 
 #include "dictionary.h"
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_external_functions.h"
+#include "maxscript\macros\define_instantiation_functions.h"
+#else
 // external name definitions
 #include "defextfn.h"
 
 // internal name definitions
 #include "definsfn.h"
+#endif
 
 #define			n_clear					(Name::intern(_T("clear")))
 #define			n_count					(Name::intern(_T("count")))

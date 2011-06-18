@@ -1,9 +1,18 @@
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\maxscript.h"
+#include "maxscript\foundation\numbers.h"
+#include "maxscript\foundation\arrays.h"
+#include "maxscript\compiler\thunks.h"
+#include "maxscript\foundation\structs.h"
+#include "maxscript\foundation\strings.h"
+#else
 #include "MAXScrpt.h"
 #include "Numbers.h"
 #include "arrays.h"
 #include "thunks.h"
 #include "Structs.h"
 #include "strings.h"
+#endif
 
 #include <algorithm>
 #include <sstream>
@@ -20,8 +29,13 @@
 
 #include "Dictionary.h"
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_external_functions.h"				// external name definitions
+#include "maxscript\macros\define_instantiation_functions.h"		// internal name definitions
+#else
 #include "defextfn.h"			// external name definitions
 #include "definsfn.h"			// internal name definitions
+#endif
 
 #define		n_lowercase			Name::intern( _T( "lowercase" ) )
 #define		n_allowchars		Name::intern( _T( "allowchars" ) )

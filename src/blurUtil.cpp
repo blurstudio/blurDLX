@@ -44,6 +44,21 @@
 */
 
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\maxscript.h"
+#include "maxscript\foundation\numbers.h"
+#include "maxscript\maxwrapper\maxclasses.h"
+#include "maxscript\foundation\streams.h"
+#include "maxscript\foundation\mxstime.h"
+#include "maxscript\maxwrapper\mxsobjects.h"
+#include "maxscript\compiler\parser.h"
+#include "maxscript\macros\local_class.h"
+#include "maxscript\maxwrapper\meshselection.h"
+#include "maxscript\foundation\3dmath.h"
+#include "maxscript\maxwrapper\mxsmaterial.h"
+#include "animtbl.h"
+HINSTANCE hInstance;
+#else
 #include "MAXScrpt.h"
 #include "Numbers.h"
 #include "MAXclses.h"
@@ -52,8 +67,12 @@
 #include "MAXObj.h"
 #include "Parser.h"
 #include "LclClass.h"
-#include "meshdelta.h"
+//#include "meshdelta.h"	// exsits in 2012
 #include "MeshSub.h"
+#include "3dmath.h"
+#include "maxmats.h"
+#endif
+#include "meshdelta.h"	// exsits in 2012
 #include "resource.h"
 #include "OPC_TriTriOverlap.h"
 #include "bbox.h"
@@ -62,10 +81,8 @@
 #include "ILayerProperties.h"
 #include "ilayer.h"
 #include "ilayermanager.h"
-#include "3dmath.h"
 #include "imtledit.h"
 
-#include "maxmats.h"
 
 #include <string>
 #include <iostream>
@@ -73,8 +90,13 @@
 #include <algorithm>
 
 // define the new primitives using macros from SDK
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_external_functions.h"
+#include "maxscript\macros\define_instantiation_functions.h"
+#else
 #include "defextfn.h"
 #include "definsfn.h"
+#endif
 
 // ------------------------------------------------------------------------------------------------------
 //											GLOBALS DEFINES

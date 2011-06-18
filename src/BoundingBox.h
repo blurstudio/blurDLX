@@ -497,8 +497,11 @@ public:
 #	define				is_BBox3(p) ((p)->tag == class_tag(BBox3Value))
 	Value*				get_property(Value** arg_list, int count);
 	Value*				set_property(Value** arg_list, int count);
-
-#include "defimpfn.h"
+	#ifdef __MAXSCRIPT_2012__
+	#include "maxscript\macros\define_implementations.h"
+	#else
+	#include "defimpfn.h"
+	#endif
 
 	use_generic ( append,		"append");
 	use_generic ( intersects ,	"intersects ");

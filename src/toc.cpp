@@ -48,16 +48,25 @@
 #include "msxml2.h"
 #include <time.h>
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\maxscript.h"
+#include "maxscript\maxwrapper\mxsobjects.h"
+#include "maxscript\maxwrapper\maxclasses.h"
+#include "maxscript\foundation\strings.h"
+#include "CoreFunctions.h"
+#include "units.h"
+#else
 #include "MAXScrpt.h"
 #include "MAXObj.h"
 #include "MAXclses.h"
+#include "strings.h"
+#endif
 
 // The three classes for managing layers in 3DSMax
 #include "ilayermanager.h"		// Contains a pure virtual class. 
 #include "iLayer.h"				// Contains a pure virtual class.
 #include "ILayerProperties.h"	// Contains two function published class's that 
 								// are the core for the maxscript exposure
-#include "strings.h"
 #include "modstack.h"
 
 #ifdef ScripterExport
@@ -67,8 +76,13 @@
 
 #include "Resource.h"
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_external_functions.h"
+#include "maxscript\macros\define_instantiation_functions.h"
+#else
 #include "defextfn.h"
 #include "definsfn.h"
+#endif
 
 #define EXPORT_PROPERTY_VALUES FALSE
 

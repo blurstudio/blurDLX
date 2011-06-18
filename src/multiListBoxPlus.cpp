@@ -55,10 +55,17 @@ POSSIBILITY OF SUCH DAMAGE.
 
 // ----------------------------------------------------------------------------
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\maxscript.h"
+#include "maxscript\foundation\numbers.h"
+#include "maxscript\compiler\parser.h"
+#include "maxscript\UI\rollouts.h"
+#else
 #include "MAXScrpt.h"
 #include "Numbers.h"
 #include "Parser.h"
 #include "rollouts.h"
+#endif
 
 // ============================================================================
 extern HINSTANCE g_hInst;
@@ -70,12 +77,20 @@ extern void ValueToBitArray(Value* inval, BitArray &theBitArray, int maxSize, TC
 #endif
 #define ScripterExport __declspec( dllexport )
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_instantiation_functions.h"
+#else
 #include "definsfn.h"
+#endif
 	def_name ( multiListBoxPlus )
 	def_name ( selectionEnd )
 	//def_name ( multiSelection )
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_external_functions.h"
+#else
 #include "defextfn.h"
+#endif
 	//def_name ( additem )
 
 class MultiListBoxPlusControl;
@@ -371,7 +386,11 @@ visible_class_instance (MultiListBoxPlusControl, "MultiListBoxPlusControl");
 // ============================================================================
 void MultiListBoxPlusCtrlInit()
 {
+	#ifdef __MAXSCRIPT_2012__
+	#include "maxscript\macros\define_implementations.h"
+	#else
 	#include "defimpfn.h"
+	#endif
 		def_name ( multiListBoxPlus )
 		def_name ( selectionEnd )
 

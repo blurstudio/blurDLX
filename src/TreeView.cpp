@@ -4,7 +4,20 @@
 // Created by Diego Garcia
 // ----------------------------------------------------------------------------
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\maxscript.h"
+#include "maxscript\maxwrapper\mxsobjects.h"
+#include "maxscript\foundation\numbers.h"
+#include "maxscript\foundation\colors.h"
+#include "maxscript\foundation\structs.h"
+#include "maxscript\compiler\parser.h"
 
+#include "maxscript\UI\rollouts.h"
+
+#include "maxscript\maxwrapper\mxsmaterial.h"
+
+extern TCHAR* GetString(int id);
+#else
 #include "MAXScrpt.h"
 #include "MAXObj.h"
 #include "Numbers.h"
@@ -13,9 +26,10 @@
 #include "Parser.h"
 
 #include "rollouts.h"
-#include "MaxIcon.h"
 
 #include "MAXMats.h"
+#endif
+#include "MaxIcon.h"
 
 
 extern HINSTANCE g_hInst;
@@ -41,8 +55,11 @@ extern INode* _get_valid_node(MAXNode* _node, TCHAR* errmsg);
 #include "TreeView.h"
 static WNDPROC lpfnWndProc = NULL; // original wndproc for the tree view 
 
-
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_instantiation_functions.h"
+#else
 #include "definsfn.h"
+#endif
 	def_name ( hwnd )
 	def_name ( additem )
 	def_name ( deleteitem )
@@ -95,8 +112,11 @@ static WNDPROC lpfnWndProc = NULL; // original wndproc for the tree view
 	def_name ( isCollapsed )
 	def_name ( editLabel )
 	
-	
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_external_functions.h"
+#else
 #include "defextfn.h"
+#endif
 	def_name ( mousedown )
 	def_name ( mouseup )
 	def_name ( rclick )
@@ -104,8 +124,6 @@ static WNDPROC lpfnWndProc = NULL; // original wndproc for the tree view
 	def_name ( rdblclick )
 	def_name ( tooltip )
 	
-
-
 
 
 // ============================================================================
@@ -1652,7 +1670,11 @@ Value* TreeViewControl::get_vf(Value** arg_list, int count)
 
 
 // ============================================================================
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_instantiation_functions.h"
+#else
 #include "definsfn.h"
+#endif
 
 visible_class_instance(TreeViewItem, "TreeItem");
 
@@ -2283,7 +2305,11 @@ Value* TreeViewItem::show_events_vf(Value** arg_list, int count)
 //--------------------------------------------------------------------------------------------------------------------------------------------------
 void TreeViewInit()
 {
+	#ifdef __MAXSCRIPT_2012__
+	#include "maxscript\macros\define_implementations.h"
+	#else
 	#include "defimpfn.h"
+	#endif
 	def_name ( hwnd )
 	def_name ( additem )
 	def_name ( deleteitem )
@@ -2369,8 +2395,13 @@ void TreeViewInit()
 
 
 // define the new primitives using macros from SDK
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_external_functions.h"
+#include "maxscript\macros\define_instantiation_functions.h"
+#else
 #include "defextfn.h"
 #include "definsfn.h"
+#endif
 
 def_struct_primitive( tv_ensureVisible, treeview, "ensureVisible");
 def_struct_primitive( tv_expand,		treeview, "expand");

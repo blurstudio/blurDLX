@@ -54,9 +54,17 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 //*****************************************************************************
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\maxscript.h"
+#include "maxscript\foundation\numbers.h"
+#include "maxscript\compiler\parser.h"
+#include "icolorman.h"
+#include <WindowsX.h>
+#else
 #include "MAXScrpt.h"
 #include "Numbers.h"
 #include "Parser.h"
+#endif
 #include "3dsmaxport.h"
 
 // ============================================================================
@@ -77,13 +85,21 @@ extern COLORREF LightenColour(COLORREF col, double factor);
 #define TOOLTIP_ID 1
 
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_instantiation_functions.h"
+#else
 #include "definsfn.h"
+#endif
 	def_name ( multiSelection )
 	def_name ( locked )
 	def_name ( escpressed )
 	def_name ( enterPressed )
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_external_functions.h"
+#else
 #include "defextfn.h"
+#endif
 	def_name ( fontName )
 	def_name ( click )
 	def_name ( dblclick )
@@ -942,7 +958,11 @@ void ListBoxPlusControl::SetFont(TCHAR *nameFont, float size, BOOL bold)
 // ============================================================================
 void ListBoxPlusCtrlInit()
 {
+	#ifdef __MAXSCRIPT_2012__
+	#include "maxscript\macros\define_implementations.h"
+	#else
 	#include "defimpfn.h"
+	#endif
 		def_name ( multiSelection )
 		def_name ( locked )
 		def_name ( escpressed )

@@ -1,7 +1,11 @@
 #ifndef		__BLURSTRING_H__
 #define		__BLURSTRING_H__
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\foundation\strings.h"
+#else
 #include "strings.h"
+#endif
 
 #include <algorithm>
 #include <sstream>

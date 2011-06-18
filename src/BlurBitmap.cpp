@@ -1,9 +1,18 @@
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\maxscript.h"
+#include "maxscript\maxwrapper\bitmaps.h"
+#include "maxscript\foundation\numbers.h"
+#include "maxscript\foundation\3dmath.h"
+#include "maxscript\maxwrapper\maxclasses.h"
+#include "maxscript\foundation\colors.h"
+#else
 #include "MAXScrpt.h"
 #include "bitmaps.h"
 #include "Numbers.h"
 #include "3DMath.h"
 #include "MAXclses.h"
 #include "ColorVal.h"
+#endif
 
 #ifdef ScripterExport
 	#undef ScripterExport
@@ -11,10 +20,15 @@
 #define ScripterExport __declspec( dllexport )
 
 // external name definitions
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_external_functions.h"
+#include "maxscript\macros\define_instantiation_functions.h"
+#else
 #include "defextfn.h"
 
 // internal name definitions
 #include "definsfn.h"
+#endif
 
 // Globals
 #define			COLOR_MULTIPLIER		255.0f

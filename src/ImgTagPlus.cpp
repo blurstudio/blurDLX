@@ -53,13 +53,23 @@ POSSIBILITY OF SUCH DAMAGE.
 
 */
 //*****************************************************************************
-
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\maxscript.h"
+#include "maxscript\maxwrapper\bitmaps.h"
+#include "maxscript\foundation\numbers.h"
+#include "maxscript\foundation\colors.h"
+#include "maxscript\foundation\3dmath.h"
+#include "maxscript\compiler\parser.h"
+#include "3dsmaxport.h"
+#include <WindowsX.h>
+#else
 #include "MAXScrpt.h"
 #include "BitMaps.h"
 #include "Numbers.h"
 #include "ColorVal.h"
 #include "3DMath.h"
 #include "Parser.h"
+#endif
 //#include "MXSAgni.h"
 
 extern HINSTANCE g_hInst;
@@ -71,7 +81,11 @@ extern HINSTANCE g_hInst;
 #endif
 #define ScripterExport __declspec( dllexport )
 
+#ifdef __MAXSCRIPT_2012__
+#include "maxscript\macros\define_instantiation_functions.h"
+#else
 #include "definsfn.h"
+#endif
 def_name ( click )
 def_name ( dblclick )
 def_name ( mousedown )
@@ -844,7 +858,11 @@ void ImgTag::set_enable()
 void ImgTagInit()
 {
 
+	#ifdef __MAXSCRIPT_2012__
+	#include "maxscript\macros\define_implementations.h"
+	#else
 	#include "defimpfn.h"
+	#endif
 	def_name ( click )
 	def_name ( dblclick )
 	def_name ( mousedown )
