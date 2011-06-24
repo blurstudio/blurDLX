@@ -57,7 +57,7 @@
 #include "maxscript\foundation\3dmath.h"
 #include "maxscript\maxwrapper\mxsmaterial.h"
 #include "animtbl.h"
-HINSTANCE hInstance;
+extern HINSTANCE hInstance;
 #else
 #include "MAXScrpt.h"
 #include "Numbers.h"

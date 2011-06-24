@@ -266,6 +266,7 @@ void			ClassDef::gc_trace() {
 Value*			ClassDef::__init__( Value** arg_list, int count ) {
 	BOOL success = false;
 	if ( this->structDefinition ) {
+		// HACK: to get to compile, make members, member_inits public in structs.h
 		Value* member = this->structDefinition->members->get( n___init__ );
 		if ( member && is_function( member ) )
 			return ( member->apply( arg_list, count ) );
@@ -280,6 +281,7 @@ Value*			ClassDef::__getattr__( Value* key ) {
 		Value* member = this->structDefinition->members->get( key );
 		if ( member ) {
 			if ( !is_function( member ) )
+				// HACK: to get to compile, make members, member_inits public in structs.h
 				result = this->structDefinition->member_inits[ member->to_int() ];
 			else
 				result = member;

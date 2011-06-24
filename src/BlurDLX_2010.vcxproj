@@ -87,8 +87,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\release\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\x86\release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\x86\Release\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</IntDir>
@@ -140,15 +140,15 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Autodesk\3ds Max 2010 SDK\maxsdk\include;C:\Program Files (x86)\Autodesk\3ds Max 2010 SDK\maxsdk\include\maxscrpt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(MAX2012SDK)\include;$(MAX2012SDK)\include\maxscrpt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>__MAXSCRIPT_2012__;WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>.\Release/BlurDLX.pch</PrecompiledHeaderOutputFile>
-      <AssemblerListingLocation>.\Release/</AssemblerListingLocation>
-      <ObjectFileName>.\Release/</ObjectFileName>
+      <PrecompiledHeaderOutputFile>.\x86\Release/BlurDLX.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\x86\Release/</AssemblerListingLocation>
+      <ObjectFileName>.\x86\Release/</ObjectFileName>
       <ProgramDataBaseFileName>BlurDLX.dlx.pdb</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -163,11 +163,11 @@
       <AdditionalOptions>/MACHINE:I386 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>comctl32.lib;odbc32.lib;odbccp32.lib;version.lib;wininet.lib;mnmath.lib;geom.lib;expr.lib;bmm.lib;maxscrpt.lib;core.lib;maxutil.lib;Vfw32.lib;mesh.lib;msxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>LinkVerboseLib</ShowProgress>
-      <OutputFile>$(OutDir)$(ProjectName).dlx</OutputFile>
+      <OutputFile>x86\$(ProjectName).dlx</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>C:\Program Files (x86)\Autodesk\3ds Max 2010 SDK\maxsdk\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(MAX2012SDK)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>.\BlurDLX.def</ModuleDefinitionFile>
-      <ProgramDatabaseFile>..\..\..\..\..\maxsdk\plugin\BlurDLX.dlx.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>x86\BlurDLX.dlx.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -176,12 +176,11 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <ImportLibrary>.\Release/BlurDLX.lib</ImportLibrary>
+      <ImportLibrary>.\x86\Release/BlurDLX.lib</ImportLibrary>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)$(ProjectName).dlx c:\max10\plugins\Blur\
-copy $(OutDir)$(ProjectName).dlx $(ProjectDir)\..\output\x32\
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -204,9 +203,9 @@ copy $(OutDir)$(ProjectName).dlx $(ProjectDir)\..\output\x32\
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>.\Release/BlurDLX.pch</PrecompiledHeaderOutputFile>
-      <AssemblerListingLocation>.\Release/</AssemblerListingLocation>
-      <ObjectFileName>.\Release/</ObjectFileName>
+      <PrecompiledHeaderOutputFile>.\x64\Release/BlurDLX.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\x64\Release/</AssemblerListingLocation>
+      <ObjectFileName>.\x64\Release/</ObjectFileName>
       <ProgramDataBaseFileName>BlurDLX.dlx.pdb</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -220,12 +219,12 @@ copy $(OutDir)$(ProjectName).dlx $(ProjectDir)\..\output\x32\
     <Link>
       <AdditionalDependencies>comctl32.lib;odbc32.lib;odbccp32.lib;version.lib;wininet.lib;mnmath.lib;geom.lib;expr.lib;bmm.lib;maxscrpt.lib;core.lib;maxutil.lib;Vfw32.lib;mesh.lib;msxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>LinkVerboseLib</ShowProgress>
-      <OutputFile>$(OutDir)$(ProjectName).dlx</OutputFile>
+      <OutputFile>x64\$(ProjectName).dlx</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>$(MAX2012SDK)\x64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>.\BlurDLX.def</ModuleDefinitionFile>
-      <ProgramDatabaseFile>..\..\..\..\..\maxsdk\plugin\BlurDLX.dlx.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>.\x64\BlurDLX.dlx.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -234,13 +233,12 @@ copy $(OutDir)$(ProjectName).dlx $(ProjectDir)\..\output\x32\
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <ImportLibrary>.\Release/BlurDLX.lib</ImportLibrary>
+      <ImportLibrary>.\x64\Release/BlurDLX.lib</ImportLibrary>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)$(ProjectName).dlx $(MAX9PATH64)\plugins\Blur\
-copy $(OutDir)$(ProjectName).dlx $(ProjectDir)\..\output\x64\
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Hybrid|Win32'">
