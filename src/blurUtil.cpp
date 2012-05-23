@@ -307,7 +307,9 @@ ulong		GetUniqueId( ReferenceTarget* targ ) {
 	if ( !ad ) {
 		ulong newId		= GenUniqueId();
 		int size		= static_cast<int>( sizeof(ulong) );
-		targ->AddAppDataChunk( Class_ID(BLURDLX_CLASS_ID,0), CUST_ATTRIB_CLASS_ID, UNIQUE_ID_INDEX, size, (ulong*) new ulong(newId) );
+		ulong* pNewId = (ulong*)MAX_malloc(sizeof(ulong));
+		*pNewId = newId;
+		targ->AddAppDataChunk( Class_ID(BLURDLX_CLASS_ID,0), CUST_ATTRIB_CLASS_ID, UNIQUE_ID_INDEX, size, pNewId );
 		return newId;
 	}
 	// Otherwise, return the reftarget's unique id
