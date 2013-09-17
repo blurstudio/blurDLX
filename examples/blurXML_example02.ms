@@ -15,26 +15,28 @@
 */
 
 -- we create a new xml document
-xmlDoc = blurXML.NewDocument()
+--xmlDoc = blurXML.NewDocument()
+blurdev = python.import "blurdev"
+xmldoc = blurdev.XML.XMLDocument()
 
 -- rootnode is the very basic node at the root of the document we have to use it in order to add elements
-xmlRoot = xmlDoc.rootNode
+--xmlRoot = xmlDoc.rootNode
+--xmlRoot = xmldoc.addNode_( "BlurAnimation" )
 
 -- here we add several nodes
-xmlRoot = blurXML.AddNode xmlDoc "root"
-xmlObjs = blurXML.AddNode xmlDoc "objects" parent:xmlRoot 
-
+xmlRoot = xmlDoc.addNode_  "root"
+xmlObjs = xmlRoot.addNode_ "objects"
 
 --we are going to export the objects in the scene
 for o in ($geometry as array) do
 (
 	-- create a new node with the object name
-	xmlNode = blurXML.AddNode xmlDoc o.name parent:xmlObjs
+	nodeXml = xmlObjs.addNode_ o.name
 	
 	-- attributes are attached to the node
-	blurXML.AddAttribute xmlNode "name" (o.name)
-	blurXML.AddAttribute xmlNode "vertCount" ((o.mesh.numverts) as string)
-	blurXML.AddAttribute xmlNode "faceCount" ((o.mesh.numfaces) as string)
+	nodeXml.setAttribute_ "name" (o.name)
+	nodeXml.setAttribute_ "vertCount" ((o.mesh.numverts) as string)
+	nodeXml.setAttribute_ "faceCount" ((o.mesh.numfaces) as string)
 	
 	props = getpropnames o
 	
@@ -44,12 +46,14 @@ for o in ($geometry as array) do
 		for p in props do
 		(
 			local pValue = try (getproperty o p) catch (undefined)
-			blurXML.AddProperty xmlNode p (pValue as string)
+			print (nodeXml as string +" : " + p as string)
+			nodeXml.setProperty p (pValue as string)
 		)
 	)
 )
 
 -- finally we save the document to disk
-blurXML.saveDocument xmlDoc "C:/temp/blurXML_example02.xml"
+--blurXML.saveDocument xmlDoc "C:/temp/blurXML_example02.xml"
+xmldoc.save("C:/temp/blurXML_example02.xml")
 
 
