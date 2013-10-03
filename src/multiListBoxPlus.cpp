@@ -55,30 +55,16 @@ POSSIBILITY OF SUCH DAMAGE.
 
 // ----------------------------------------------------------------------------
 
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\maxscript.h"
-#include "maxscript\foundation\numbers.h"
-#include "maxscript\compiler\parser.h"
-#include "maxscript\UI\rollouts.h"
-#else
-#include "MAXScrpt.h"
-#include "Numbers.h"
-#include "Parser.h"
-#include "rollouts.h"
-#endif
+
+#include "imports.h"
 
 // ============================================================================
 extern HINSTANCE g_hInst;
 extern void ValueToBitArray(Value* inval, BitArray &theBitArray, int maxSize, TCHAR* errmsg = _T(""), int selTypesAllowed = 0);
 
 
-#ifdef ScripterExport
-	#undef ScripterExport
-#endif
-#define ScripterExport __declspec( dllexport )
-
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\macros\define_instantiation_functions.h"
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
+#include "macros/define_instantiation_functions.h"
 #else
 #include "definsfn.h"
 #endif
@@ -86,8 +72,8 @@ extern void ValueToBitArray(Value* inval, BitArray &theBitArray, int maxSize, TC
 	def_name ( selectionEnd )
 	//def_name ( multiSelection )
 
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\macros\define_external_functions.h"
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
+#include "macros/define_external_functions.h"
 #else
 #include "defextfn.h"
 #endif
@@ -149,8 +135,8 @@ public:
 	{
 		setup_layout(ro, pos, current_y);
 
-		TCHAR*	label_text = caption->eval()->to_string();
-		int label_height = (strlen(label_text) != 0) ? ro->text_height + SPACING_BEFORE - 2 : 0;
+		const TCHAR * label_text = caption->eval()->to_string();
+		int label_height = (_tcslen(label_text) != 0) ? ro->text_height + SPACING_BEFORE - 2 : 0;
 		Value* height_obj;
 		int item_count = int_control_param(height, height_obj, 10);
 		int lb_height = item_count * ro->text_height + 7;
@@ -166,7 +152,7 @@ public:
 		HWND	label, list_box;
 		int		left, top, width, height;
 		SIZE	size;
-		TCHAR*	label_text = caption->eval()->to_string();
+		const TCHAR * label_text = caption->eval()->to_string();
 
 		// add 2 controls for a list box: a static label & the list
 		parent_rollout = ro;
@@ -174,7 +160,7 @@ public:
 		WORD label_id = next_id();
 		WORD list_box_id = control_ID;
 
-		int label_height = (strlen(label_text) != 0) ? ro->text_height + SPACING_BEFORE - 2 : 0;
+		int label_height = (_tcslen(label_text) != 0) ? ro->text_height + SPACING_BEFORE - 2 : 0;
 		Value* height_obj;
 		int item_count = int_control_param(height, height_obj, 10);
 		int lb_height = item_count * ro->text_height + 7;
@@ -188,7 +174,7 @@ public:
 		// when control moved, setting caption text set wrong HWND). Now always create.
 //		if (label_height != 0)
 //		{
-			GetTextExtentPoint32(ro->rollout_dc, label_text, (int)strlen(label_text), &size); 	
+			GetTextExtentPoint32(ro->rollout_dc, label_text, (int)_tcslen(label_text), &size);
 			width = min(size.cx, pos.width); height = ro->text_height;
 			top = pos.top; 
 			label = CreateWindow(_T("STATIC"),
@@ -231,9 +217,9 @@ public:
 		SendMessage(list_box, LB_RESETCONTENT, 0, 0);
 		for (int i = 0; i < item_array->size; i++)
 		{
-			TCHAR* item = item_array->data[i]->to_string();
+			const TCHAR* item = item_array->data[i]->to_string();
 			SendMessage(list_box, LB_ADDSTRING, 0, (LPARAM)item);
-			GetTextExtentPoint32(ro->rollout_dc, item, (int)strlen(item), &size); 	
+			GetTextExtentPoint32(ro->rollout_dc, item, (int)_tcslen(item), &size); 	
 			if (size.cx > max_width) max_width = size.cx;
 			SendMessage(list_box, LB_SETSEL, (*selection)[i], i);
 		}
@@ -288,7 +274,7 @@ public:
 
 		if (prop == n_text || prop == n_caption)
 		{
-			TCHAR* text = val->to_string();
+			const TCHAR * text = val->to_string();
 			caption = val->get_heap_ptr();
 			if (parent_rollout != NULL && parent_rollout->page != NULL)
 				set_text(text, GetDlgItem(parent_rollout->page, control_ID + 1), n_left);
@@ -381,19 +367,17 @@ public:
 
 visible_class_instance (MultiListBoxPlusControl, "MultiListBoxPlusControl");
 
-
-
 // ============================================================================
 void MultiListBoxPlusCtrlInit()
 {
-	#ifdef __MAXSCRIPT_2012__
-	#include "maxscript\macros\define_implementations.h"
-	#else
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
+	#include "macros/define_implementations.h"
+#else
 	#include "defimpfn.h"
-	#endif
+#endif
 		def_name ( multiListBoxPlus )
 		def_name ( selectionEnd )
 
-	install_rollout_control(n_multiListBoxPlus,		MultiListBoxPlusControl::create);
+	install_rollout_control(n_multiListBoxPlus, MultiListBoxPlusControl::create);
 }
 

@@ -43,24 +43,11 @@
 				POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include "imports.h"
 
 #include "atlbase.h"
 #include "msxml2.h"
 #include <time.h>
-
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\maxscript.h"
-#include "maxscript\maxwrapper\mxsobjects.h"
-#include "maxscript\maxwrapper\maxclasses.h"
-#include "maxscript\foundation\strings.h"
-#include "CoreFunctions.h"
-#include "units.h"
-#else
-#include "MAXScrpt.h"
-#include "MAXObj.h"
-#include "MAXclses.h"
-#include "strings.h"
-#endif
 
 // The three classes for managing layers in 3DSMax
 #include "ilayermanager.h"		// Contains a pure virtual class. 
@@ -69,14 +56,10 @@
 								// are the core for the maxscript exposure
 #include "modstack.h"
 
-#ifdef ScripterExport
-	#undef ScripterExport
-#endif
-#define ScripterExport __declspec( dllexport )
 
 #include "Resource.h"
 
-#ifdef __MAXSCRIPT_2012__
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 #include "maxscript\macros\define_external_functions.h"
 #include "maxscript\macros\define_instantiation_functions.h"
 #else
@@ -86,14 +69,27 @@
 
 #define EXPORT_PROPERTY_VALUES FALSE
 
-void FPValueToUIString( FPValue* val, TCHAR* str ) {
+/* Unused
+ 
+void FPValueToUIString( FPValue* val, TCHAR* str )
+{
 	switch( val->type ) {
-	case TYPE_WORLD:		_stprintf( str, "%s", FormatUniverseValue(val->f) ); break;
-	case TYPE_FLOAT:		_stprintf( str, "%f", val->f );				break;
-	case TYPE_INT:			_stprintf( str, "%i", val->i );				break;
-	case TYPE_STRING:		_stprintf( str, "%s", val->s );				break;
+	case TYPE_WORLD:
+		_stprintf( str, "%s", FormatUniverseValue(val->f) );
+		break;
+	case TYPE_FLOAT:
+		_stprintf( str, "%f", val->f );
+		break;
+	case TYPE_INT:
+		_stprintf( str, "%i", val->i );
+		break;
+	case TYPE_STRING:
+		_stprintf( str, "%s", val->s );
+		break;
 	case TYPE_TSTR_BV:
-	case TYPE_TSTR:			_stprintf( str, "%s", val->tstr->data() );	break;
+	case TYPE_TSTR:
+		_stprintf( str, "%s", val->tstr->data() );
+		break;
 	case TYPE_BOOL:
 		_tcscpy( str, (val->i? _T("True") : _T("False")) );
 		break;
@@ -103,11 +99,13 @@ void FPValueToUIString( FPValue* val, TCHAR* str ) {
 	}
 }
 
+*/
+
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //	xml funcs
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CreateXMLNode(IXMLDOMDocument * doc, IXMLDOMNode * node, TCHAR *nodeName, IXMLDOMNode ** newNode)
+bool CreateXMLNode(IXMLDOMDocument * doc, IXMLDOMNode * node, const TCHAR *nodeName, IXMLDOMNode ** newNode)
 {
 	IXMLDOMNode * sceneNode;
 	doc->createNode(CComVariant(NODE_ELEMENT), CComBSTR(nodeName), NULL, &sceneNode);
@@ -115,7 +113,7 @@ bool CreateXMLNode(IXMLDOMDocument * doc, IXMLDOMNode * node, TCHAR *nodeName, I
 	return true;
 }
 
-bool AddXMLAttribute(IXMLDOMNode * node, TCHAR * name, TCHAR * value)
+bool AddXMLAttribute(IXMLDOMNode * node, const TCHAR * name, const TCHAR * value)
 {
 	CComQIPtr<IXMLDOMElement> element;
 	element = node;
@@ -123,7 +121,7 @@ bool AddXMLAttribute(IXMLDOMNode * node, TCHAR * name, TCHAR * value)
 	return true;
 }
 
-bool AddXMLText(IXMLDOMDocument * doc, IXMLDOMNode * node, TCHAR * text)
+bool AddXMLText(IXMLDOMDocument * doc, IXMLDOMNode * node, const TCHAR * text)
 {
 	CComPtr <IXMLDOMText> keydata = NULL;
 	doc->createTextNode(CComBSTR(text), &keydata);
@@ -199,13 +197,14 @@ void PrettyPrint(const TCHAR* name, IXMLDOMDocument* pXMLDoc)
 		if (out != NULL) {
 			// hack the UTF-16 back to UTF-8 (there probably is a way to mod the stylesheet to do this)
 			wchar_t* enc = wcsstr(outputXML, L"\"UTF-16\"");
-			if (enc != NULL) memcpy(enc, L"\"utf-8\" ", 8 * sizeof(wchar_t));
+			if (enc != NULL)
+				memcpy(enc, L"\"utf-8\" ", 8 * sizeof(wchar_t));
 			// convert BSTR to MBCS for output
-			int len = WideCharToMultiByte(CP_ACP, 0, outputXML, -1, 0, 0, NULL, NULL);
-			TCHAR* buf = (TCHAR*)malloc(len * sizeof(WCHAR));
-			WideCharToMultiByte(CP_ACP, 0, outputXML, -1, buf, len, NULL, NULL);
+			int len = WideCharToMultiByte(CP_UTF8, 0, outputXML, -1, 0, 0, NULL, NULL);
+			char * buf = (char*)malloc(len);
+			WideCharToMultiByte(CP_UTF8, 0, outputXML, -1, buf, len, NULL, NULL);
 			// write the XML
-			_fputts(buf, out);   
+			fputs(buf, out);
 			fclose(out);
 			free(buf);
 		}
@@ -216,11 +215,9 @@ void PrettyPrint(const TCHAR* name, IXMLDOMDocument* pXMLDoc)
 		pXMLDoc->save(CComVariant(name));
 }
 
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//	toc funcs
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// toc funcs
 
-//user info
+// user info
 void ExportUserInfo ( IXMLDOMDocument* pXMLDoc, IXMLDOMNode* parentNode )
 {
 	CComPtr<IXMLDOMNode> tempNode;
@@ -246,7 +243,7 @@ void ExportUserInfo ( IXMLDOMDocument* pXMLDoc, IXMLDOMNode* parentNode )
 	GetComputerName(computername,&namesize);
 
 	TCHAR maxversion[MAX_PATH];
-	sprintf(maxversion,"%d",Get3DSMAXVersion());
+	_tprintf(maxversion,_T("%d"),Get3DSMAXVersion());
 
 	tempNode = NULL;
 	CreateXMLNode(pXMLDoc, parentNode, _T("user"), &tempNode);
@@ -282,13 +279,13 @@ void ExportClassInfo ( IXMLDOMDocument* pXMLDoc, IXMLDOMNode* parentNode , Anima
 	cls->sprint(clsStr);
 	scls->sprint(sclsStr);
 
-	buf.printf( "%s", clsStr->to_string() );
+	buf.printf( _T("%s"), clsStr->to_string() );
 
 	tempNode = NULL;
 	CreateXMLNode(pXMLDoc, parentNode, _T("classof"), &tempNode);
 	AddXMLText(pXMLDoc, tempNode, buf );
 	
-	buf.printf( "%s", sclsStr->to_string() );
+	buf.printf( _T("%s"), sclsStr->to_string() );
 	
 	tempNode = NULL;
 	CreateXMLNode(pXMLDoc, parentNode, _T("superclassof"), &tempNode);
@@ -333,7 +330,7 @@ void ExportPropertiesInfo ( IXMLDOMDocument* pXMLDoc, IXMLDOMNode* parentNode , 
 
 			StringStream* propNamesStr = new StringStream( _T("#()") );
 			propsArray->sprint( propNamesStr );
-			buf.printf ("%s", propNamesStr->to_string() );
+			buf.printf( _T("%s"), propNamesStr->to_string() );
 			AddXMLAttribute( propsNode, _T("names"), buf.data() );
 			propsCount = propsArray->size;
 
@@ -352,7 +349,7 @@ void ExportPropertiesInfo ( IXMLDOMDocument* pXMLDoc, IXMLDOMNode* parentNode , 
 						Value* propValue;
 
 						StringStream* propNameStr = new StringStream( propName );
-						buf.printf ("%s", propNameStr->to_string() );
+						buf.printf( _T("%s"), propNameStr->to_string() );
 
 						// properties that start with '_' we don't process them, skin modifier props like that give error when accesing them
 						if ( buf[0] == _T('_') )
@@ -369,7 +366,7 @@ void ExportPropertiesInfo ( IXMLDOMDocument* pXMLDoc, IXMLDOMNode* parentNode , 
 
 						StringStream* propValueStr = new StringStream( _T("") );
 						propValue->sprint(propValueStr);
-						buf.printf( "%s", propValueStr->to_string() );
+						buf.printf( _T("%s"), propValueStr->to_string() );
 						
 						AddXMLText(pXMLDoc, tempNode, buf.data() );
 						propsCount++;
@@ -381,7 +378,7 @@ void ExportPropertiesInfo ( IXMLDOMDocument* pXMLDoc, IXMLDOMNode* parentNode , 
 			
 		}
 
-		buf.printf( "%d", propsCount );
+		buf.printf( _T("%d"), propsCount );
 		AddXMLAttribute( propsNode, _T("count"), buf );
 	}
 	else
@@ -405,7 +402,7 @@ void ExportLayersInfo ( IXMLDOMDocument* pXMLDoc, IXMLDOMNode* parentNode )
 	IFPLayerManager* lm = static_cast<IFPLayerManager *>(GetCOREInterface(LAYERMANAGER_INTERFACE));
 	
 	int layerCount = lm->getCount();
-	buf.printf("%d",layerCount);
+	buf.printf( _T("%d"),layerCount);
 
 	layersRootNode = NULL;
 	CreateXMLNode(pXMLDoc, parentNode, _T("Layers"), &layersRootNode);
@@ -421,11 +418,11 @@ void ExportLayersInfo ( IXMLDOMDocument* pXMLDoc, IXMLDOMNode* parentNode )
 		CreateXMLNode( pXMLDoc, layersRootNode, _T("Layer"), &layer );
 		
 		// layer name
-		buf.printf( "%s", hLayer->getName() );
+		buf.printf( _T("%s"), hLayer->getName() );
 		AddXMLAttribute( layer, _T("name"), buf );
 		
 		// layer index
-		buf.printf( "%d", i );
+		buf.printf( _T("%d"), i );
 		AddXMLAttribute( layer, _T("index"), buf );
 
 		//names of the objects on each layer
@@ -450,28 +447,28 @@ void ExportLayersInfo ( IXMLDOMDocument* pXMLDoc, IXMLDOMNode* parentNode )
 		CreateXMLNode(pXMLDoc, layer, _T("objects"), &tempNode);
 		AddXMLText(pXMLDoc, tempNode, objNames.data() );
 
-		buf.printf("%s",hLayer->getCurrent()?"true":"false" );
+		buf.printf(_T("%s"),hLayer->getCurrent()?"true":"false" );
 		tempNode = NULL;
 		CreateXMLNode(pXMLDoc, layer, _T("current"), &tempNode);
 		AddXMLText(pXMLDoc, tempNode, buf );
 
-		buf.printf("%s",hLayer->getOn()?"true":"false" );
+		buf.printf(_T("%s"),hLayer->getOn()?"true":"false" );
 		tempNode = NULL;
 		CreateXMLNode(pXMLDoc, layer, _T("on"), &tempNode);
 		AddXMLText(pXMLDoc, tempNode, buf );
 
-		buf.printf("%s",hLayer->getLock()?"true":"false" );
+		buf.printf(_T("%s"),hLayer->getLock()?"true":"false" );
 		tempNode = NULL;
 		CreateXMLNode(pXMLDoc, layer, _T("lock"), &tempNode);
 		AddXMLText(pXMLDoc, tempNode, buf );
 
 		Color hcolor = hLayer->getWireColor();
-		buf.printf("( color %f %f %f )",hcolor.r, hcolor.g, hcolor.b );
+		buf.printf(_T("( color %f %f %f )"),hcolor.r, hcolor.g, hcolor.b );
 		tempNode = NULL;
 		CreateXMLNode(pXMLDoc, layer, _T("wirecolor"), &tempNode);
 		AddXMLText(pXMLDoc, tempNode, buf );
 
-		buf.printf("%s",hLayer->getGIIsExcluded()?"true":"false" );
+		buf.printf(_T("%s"),hLayer->getGIIsExcluded()?"true":"false" );
 		tempNode = NULL;
 		CreateXMLNode(pXMLDoc, layer, _T("isGIExcluded"), &tempNode);
 		AddXMLText(pXMLDoc, tempNode, buf );
@@ -528,14 +525,14 @@ void ExportModifiersInfo ( IXMLDOMDocument* pXMLDoc, IXMLDOMNode* parentNode, IN
 	    IDerivedObject* dobj = (IDerivedObject*)obj;
 	    int numMods = dobj->NumModifiers();
 
-		buf.printf( "%d", numMods );
+		buf.printf( _T("%d"), numMods );
 		AddXMLAttribute(modsRootNode, _T("count"), buf.data() );
 
 		for (int i = 0; i < numMods; i++) 
 		{
 			TSTR modName;
 			Modifier *m = dobj->GetModifier(i);
-			buf.printf( "%s", m->GetName() );
+			buf.printf( _T("%s"), m->GetName() );
 
 			tempNode = NULL;
 			CreateXMLNode(pXMLDoc, modsRootNode, _T("modifier"), &tempNode);
@@ -566,7 +563,7 @@ void ExportNodeInfo ( IXMLDOMDocument* pXMLDoc, IXMLDOMNode* parentNode , INode*
 	CreateXMLNode(pXMLDoc, parentNode, _T("Object"), &objectNode);
 
 	// object name
-	buf.printf( "%s", pNode->GetName() );
+	buf.printf( _T("%s"), pNode->GetName() );
 	AddXMLAttribute( objectNode, _T("name"), buf );
 
 	// object class and superclass
@@ -581,11 +578,11 @@ void ExportNodeInfo ( IXMLDOMDocument* pXMLDoc, IXMLDOMNode* parentNode , INode*
 		TSTR rowStr = _T("");
 		Point3 row = nodeTM.GetRow(i);
 
-		rowStr.printf("[%f, %f, %f] ", row.x, row.y, row.z);
+		rowStr.printf( _T("[%f, %f, %f] "), row.x, row.y, row.z);
 		transformStr += rowStr;
 	}
 
-	buf.printf( "%s", pNode->GetName() );
+	buf.printf( _T("%s"), pNode->GetName() );
 	transformStr += _T(" )");
 
 	tempNode = NULL;
@@ -594,14 +591,14 @@ void ExportNodeInfo ( IXMLDOMDocument* pXMLDoc, IXMLDOMNode* parentNode , INode*
 
 	// material
 	Mtl* nodeMat = pNode->GetMtl();
-	nodeMat ? buf.printf( "%s", nodeMat->GetName() ) : buf.printf( "undefined" );
+	nodeMat ? buf.printf( _T("%s"), nodeMat->GetName() ) : buf.printf( _T("undefined") );
 
 	tempNode = NULL;
 	CreateXMLNode(pXMLDoc, objectNode, _T("material"), &tempNode);
 	AddXMLText(pXMLDoc, tempNode, buf );
 
 	// handle
-	buf.printf( "%u", pNode->GetHandle() );
+	buf.printf( _T("%u"), pNode->GetHandle() );
 
 	tempNode = NULL;
 	CreateXMLNode(pXMLDoc, objectNode, _T("handle"), &tempNode);
@@ -609,14 +606,14 @@ void ExportNodeInfo ( IXMLDOMDocument* pXMLDoc, IXMLDOMNode* parentNode , INode*
 
 	// parent name
 	INode* parent = pNode->GetParentNode();
-	parent ? buf.printf( "%s", parent->GetName() ) : buf.printf( "undefined" );
+	parent ? buf.printf( _T("%s"), parent->GetName() ) : buf.printf( _T("undefined") );
 
 	tempNode = NULL;
 	CreateXMLNode(pXMLDoc, objectNode, _T("parent"), &tempNode);
 	AddXMLText(pXMLDoc, tempNode, buf );
 
 	// parent handle
-	parent ? buf.printf( "%u", parent->GetHandle() ) : buf.printf( "undefined" );
+	parent ? buf.printf( _T("%u"), parent->GetHandle() ) : buf.printf( _T("undefined") );
 
 	tempNode = NULL;
 	CreateXMLNode(pXMLDoc, objectNode, _T("parentHandle"), &tempNode);
@@ -624,28 +621,28 @@ void ExportNodeInfo ( IXMLDOMDocument* pXMLDoc, IXMLDOMNode* parentNode , INode*
 
 	// layer
 	ILayer* nodeLayer = (ILayer*) pNode->GetReference(NODE_LAYER_REF);
-	nodeLayer ? buf.printf( "%s", nodeLayer->GetName() ) : buf.printf( "undefined" );
+	nodeLayer ? buf.printf( _T("%s"), nodeLayer->GetName() ) : buf.printf( _T("undefined") );
 
 	tempNode = NULL;
 	CreateXMLNode(pXMLDoc, objectNode, _T("layer"), &tempNode);
 	AddXMLText(pXMLDoc, tempNode, buf );
 
 	// ishiddeninviewport
-	buf.printf( "%s", pNode->IsHidden()?_T("true"):_T("false") );
+	buf.printf( _T("%s"), pNode->IsHidden()?_T("true"):_T("false") );
 
 	tempNode = NULL;
 	CreateXMLNode(pXMLDoc, objectNode, _T("isHidden"), &tempNode);
 	AddXMLText(pXMLDoc, tempNode, buf );
 
 	// isanimated
-	buf.printf( "%s", pNode->IsAnimated()?_T("true"):_T("false") );
+	buf.printf( _T("%s"), pNode->IsAnimated()?_T("true"):_T("false") );
 
 	tempNode = NULL;
 	CreateXMLNode(pXMLDoc, objectNode, _T("isAnimated"), &tempNode);
 	AddXMLText(pXMLDoc, tempNode, buf );
 
 	// isfrozen
-	buf.printf( "%s", pNode->IsFrozen()?_T("true"):_T("false") );
+	buf.printf( _T("%s"), pNode->IsFrozen()?_T("true"):_T("false") );
 
 	tempNode = NULL;
 	CreateXMLNode(pXMLDoc, objectNode, _T("isFrozen"), &tempNode);
@@ -725,7 +722,7 @@ Value* exportTOCFile_cf(Value** arg_list, int arg_count)
 	elapsed_time = difftime( finish, start );
 
 	TSTR buf;
-	buf.printf("%f", elapsed_time);
+	buf.printf(_T("%f"), elapsed_time);
 
 	tempNode = NULL;
 	CreateXMLNode(pXMLDoc, tocNode, _T("timeToCalculateTOC"), &tempNode);

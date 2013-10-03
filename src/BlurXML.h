@@ -8,14 +8,15 @@ class XMLNodeList;
 class XMLDocument;
 
 visible_class( XMLNode );
+
 class XMLNode : public AppliedValue {
 	private:
-		CComPtr<IXMLDOMNode>	_node;
-		IXMLDOMDocument*	_document;
+		CComPtr<IXMLDOMNode> _node;
+		IXMLDOMDocument * _document;
 
 	public:
-					XMLNode( IXMLDOMNode* node, IXMLDOMDocument* document );
-					~XMLNode();
+		XMLNode( IXMLDOMNode* node, IXMLDOMDocument* document );
+		~XMLNode();
 
 		//------------------------------------------------------------------
 		//						C++ METHODS
@@ -23,7 +24,7 @@ class XMLNode : public AppliedValue {
 		XMLNode*			addNode( TSTR nodeName );
 		XMLNodeList*		attributes();
 		XMLNode*			attributeByName( TSTR name );
-		TCHAR*				baseName();
+		TSTR				baseName();
 		XMLNodeList*		children();
 		XMLNode*			childByIndex( int index );
 		XMLNode*			childByName( TSTR name );
@@ -32,19 +33,19 @@ class XMLNode : public AppliedValue {
 		XMLNode*			firstChild();
 		bool				isParsed();
 		bool				isProperty();
-		bool				isValid()					{ return this->_node != NULL; }
+		bool				isValid() { return _node != NULL; }
 		XMLNode*			lastChild();
-		TCHAR*				namespaceURI();
+		TSTR				namespaceURI();
 		XMLNode*			nextSibling();
 		IXMLDOMNode*		node();
-		TCHAR*				nodeName();
+		TSTR				nodeName();
 		int					nodeType();
 		long				numAttributes();
 		long				numChildren();
 		long				numNodes();
 		long				numProperties();
 		XMLNode*			parent();
-		TCHAR*				prefix();
+		TSTR				prefix();
 		XMLNode*			previousSibling();
 		XMLNodeList*		properties();
 		XMLNode*			propertyByName( TSTR name );
@@ -74,10 +75,10 @@ class XMLNode : public AppliedValue {
 		bool				setValue( TSTR val );
 		bool				setValue( Value* val );
 
-		TCHAR*				text();
+		TSTR				text();
 		IXMLDOMNode*		textNode();
 		Value*				value();
-		TCHAR*				writeXML();
+		TSTR				writeXML();
 
 
 		//------------------------------------------------------------------
@@ -88,12 +89,17 @@ class XMLNode : public AppliedValue {
 		void				gc_trace();
 
 		classof_methods( XMLNode, Value );
-#define						is_xmlnode(p) ((p)->tag == class_tag( XMLNode ))
+#define is_xmlnode(p) ((p)->tag == class_tag( XMLNode ))
 
 		Value*				applyMethod( Value* methodID, Value** arg_list, int count, CallContext* cc );
 		Value*				get_property( Value** arg_list, int count );
 		Value*				set_property( Value** arg_list, int count );
 
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
+	#include "macros/define_implementations.h"
+#else
+	#include "defimpfn.h"
+#endif
 		def_generic(		get,		"get" );
 		//use_generic(		eq,			"=" );
 
@@ -104,28 +110,28 @@ class XMLNode : public AppliedValue {
 visible_class( XMLNodeList );
 class XMLNodeList : public Value {
 	private:
-		IXMLDOMDocument*		_document;
-		IXMLDOMNodeList*		_nodeList;
-		IXMLDOMNamedNodeMap*	_attrList;
-		Array*					_propList;
+		IXMLDOMDocument * _document;
+		IXMLDOMNodeList * _nodeList;
+		IXMLDOMNamedNodeMap * _attrList;
+		Array * _propList;
 
 	public:
-					XMLNodeList( IXMLDOMDocument* document, IXMLDOMNodeList* nodeList );
-					XMLNodeList( IXMLDOMDocument* document, IXMLDOMNamedNodeMap* attrList );
-					XMLNodeList( IXMLDOMDocument* document );
-					~XMLNodeList();
+		XMLNodeList( IXMLDOMDocument* document, IXMLDOMNodeList* nodeList );
+		XMLNodeList( IXMLDOMDocument* document, IXMLDOMNamedNodeMap* attrList );
+		XMLNodeList( IXMLDOMDocument* document );
+		~XMLNodeList();
 
 		//------------------------------------------------------------------
 		//						C++ METHODS
 		//------------------------------------------------------------------
 		bool				addItem( XMLNode* item );
-		IXMLDOMDocument*	document()					{ return this->_document; }
+		IXMLDOMDocument*	document() { return _document; }
 		XMLNode*			getItem( int index );
-		XMLNode*			getItem( TCHAR* name );
-		bool				isAttrList()				{ return ( this->_attrList != NULL ); }
-		bool				isNodeList()				{ return ( this->_nodeList != NULL ); }
-		bool				isPropList()				{ return ( this->_propList != NULL ); }
-		bool				isValid()					{ return ( this->isNodeList() || this->isAttrList() ); }
+		XMLNode*			getItem( const TCHAR * name );
+		bool				isAttrList() { return _attrList != NULL; }
+		bool				isNodeList() { return _nodeList != NULL; }
+		bool				isPropList() { return _propList != NULL; }
+		bool				isValid() { return isNodeList() || isAttrList(); }
 		long				length();
 		Array*				toArray();
 
@@ -143,9 +149,14 @@ class XMLNodeList : public Value {
 		Value*		get_names( BOOL onlyProps = FALSE, BOOL onlyNodes = FALSE );
 		Value*		get_nodes( BOOL onlyProps = FALSE, BOOL onlyNodes = FALSE );
 		Value*		map(node_map& m);
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
+	#include "macros/define_implementations.h"
+#else
+	#include "defimpfn.h"
+#endif
 
-		def_generic(	get,	"get" );
-		use_generic(	coerce,	"coerce" );
+		def_generic( get, "get" );
+		use_generic( coerce, "coerce" );
 
 		//def_generic(	show_props,	"showProperties" );
 		//def_generic(	get_props,	"getPropNames" );
@@ -161,22 +172,22 @@ class XMLDocument : public AppliedValue {
 		//------------------------------------------------------------------
 		//						   C++ METHODS
 		//------------------------------------------------------------------
-						XMLDocument();
-						~XMLDocument();
+		XMLDocument();
+		~XMLDocument();
 
 		XMLNode*			addNode( TSTR nodeName );
 		IXMLDOMDocument*	document();
 		bool				loadFromFile( TSTR fileName );
-		bool				isValid()										{ return this->_document != NULL; }
+		bool				isValid() { return _document != 0; }
 		bool				parseXML( TSTR xml );
 		XMLNode*			root();
 		bool				saveToFile( TSTR fileName );
-		TCHAR*				writeXML();
+		TSTR				writeXML();
 
 		//------------------------------------------------------------------
 		//						MAXSCRIPT METHODS
 		//------------------------------------------------------------------
-		void				collect()	{ delete this; }
+		void				collect() { delete this; }
 		void				sprin1( CharStream* s );
 		void				gc_trace();
 

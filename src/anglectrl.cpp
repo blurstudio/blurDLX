@@ -162,7 +162,7 @@ TOOLINFO* AngleControl::GetToolInfo()
 	static TOOLINFO ti;
 	static TSTR str;
 
-	str.printf("%f°", m_degrees);
+	str.printf(_T("%f°"), m_degrees);
 	memset(&ti, 0, sizeof(TOOLINFO));
 	ti.cbSize = sizeof(TOOLINFO);
 	ti.hwnd = m_hWnd;
@@ -547,7 +547,7 @@ LRESULT AngleControl::Paint()
 
 
 // ============================================================================
-local_visible_class_instance (AngleControl, "AngleControl")
+local_visible_class_instance (AngleControl, _T("AngleControl"))
 
 void
 AngleControl::compute_layout(Rollout *ro, layout_data* pos, int& current_y)
@@ -876,6 +876,6 @@ void AngleCtrlInit()
 		registered = TRUE;
 	}
 
-	install_rollout_control(Name::intern("Angle2"), AngleControl::create);
+	install_rollout_control(Name::intern(_T("Angle2")), AngleControl::create);
 }
 

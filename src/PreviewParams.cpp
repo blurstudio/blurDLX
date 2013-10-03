@@ -43,30 +43,10 @@
 				POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\maxscript.h"
-#include "maxscript\UI\rollouts.h"
-#include "maxscript\foundation\numbers.h"
-#include "maxscript\foundation\3dmath.h"
-#include "maxscript\maxwrapper\mxsobjects.h"
-#include "maxscript\maxwrapper\maxclasses.h"
-#else
-#include "MAXScrpt.h"
-#include "Rollouts.h"
-#include "Numbers.h"
-#include "3DMath.h"
-#include "MAXObj.h"
-#include "MAXclses.h"
-#endif
-
-#ifdef ScripterExport
-	#undef ScripterExport
-#endif
-#define ScripterExport __declspec( dllexport )
-
+#include "imports.h"
 #include "PreviewParams.h"
 
-#ifdef __MAXSCRIPT_2012__
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 #include "maxscript\macros\define_external_functions.h"
 #else
 #include "defextfn.h"
@@ -74,7 +54,7 @@
 	def_name ( previewparams )
 /*#	include "namedefs.h"*/
 
-#ifdef __MAXSCRIPT_2012__
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 #include "maxscript\macros\define_instantiation_functions.h"
 #else
 #include "definsfn.h"
@@ -107,7 +87,7 @@
 
 /* ------------------- PreviewParamsValue class instance -------------- */
 
-visible_class_instance (PreviewParamsValue, _T("PreviewParams"))
+visible_class_instance (PreviewParamsValue, "PreviewParams")
 
 Value* PreviewParamsValueClass::apply(Value** arg_list, int count, CallContext* cc)
 {
@@ -192,8 +172,7 @@ void PreviewParamsValue::gc_trace()
 	Value::gc_trace();
 }
 
-void
-PreviewParamsValue::sprin1(CharStream* s)
+void PreviewParamsValue::sprin1(CharStream* s)
 {
 	s->puts(_T("PreviewParams "));
 	s->printf(_T("outputType:%d "), pvs.outputType);
@@ -211,7 +190,8 @@ PreviewParamsValue::sprin1(CharStream* s)
 	s->printf(_T("rndLevel:%d "), pvs.rndLevel);
 	s->printf(_T("dspBkg:%d \n"), pvs.dspBkg);
 }
-Value*	PreviewParamsValue::get_property(Value** arg_list, int count)
+
+Value * PreviewParamsValue::get_property(Value** arg_list, int count)
 {
 	Value* prop = arg_list[0];
 
@@ -255,7 +235,7 @@ Value*	PreviewParamsValue::get_property(Value** arg_list, int count)
 	return &undefined;
 }
 
-Value*	PreviewParamsValue::set_property(Value** arg_list, int count)
+Value * PreviewParamsValue::set_property(Value** arg_list, int count)
 {
 	Value* val = arg_list[0];
 	Value* prop = arg_list[1];
@@ -349,11 +329,11 @@ Value* MakePreview_cf(Value** arg_list, int count)
 
 void PreviewParamsInit()
 {
-	#ifdef __MAXSCRIPT_2012__
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 	#include "maxscript\macros\define_implementations.h"
-	#else
+#else
 	#include "defimpfn.h"
-	#endif
+#endif
 		def_name ( previewparams )
 		def_name ( outputType )
 		def_name ( pctSize )

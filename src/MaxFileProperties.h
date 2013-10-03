@@ -89,6 +89,12 @@ public:
 	Value*		get_property(Value** arg_list, int count);
 	Value*		set_property(Value** arg_list, int count);
 
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
+	#include "maxscript\macros\define_implementations.h"
+#else
+	#include "defimpfn.h"
+#endif
+
 	def_generic (show_props, "showProperties");
 	def_generic (get_props,  "getPropNames");
 };

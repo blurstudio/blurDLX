@@ -55,11 +55,7 @@ POSSIBILITY OF SUCH DAMAGE.
 //*****************************************************************************
 
 // max 2012 switched the name of maxscript includes
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\maxscript.h"
-#else
-#include "MAXScrpt.h"
-#endif
+#include "imports.h"
 
 #pragma comment(lib, "comctl32.lib")
 
@@ -176,3 +172,17 @@ LibDescription()
 __declspec( dllexport ) ULONG
 LibVersion() {  return VERSION_3DSMAX; }
 
+// Maxscript 2012 requires these additional exports
+//#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
+
+// we aren't defining any classes in this plugin, so this is pretty easy
+// other plugins should refer to samples/scriptplugin for an example of the new
+// registration system - that is the only plugin that does not error out of the samples
+// in max
+__declspec( dllexport ) int LibNumberClasses()
+{ return 0; }
+
+__declspec( dllexport ) ClassDesc * LibClassDesc( int i )
+{ return 0; }
+
+//#endif

@@ -43,26 +43,10 @@
 				POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\maxscript.h"
-#include "maxscript\foundation\numbers.h"
-#include "maxscript\maxwrapper\maxclasses.h"
-#include "maxscript\foundation\strings.h"
-#else
-#include "MAXScrpt.h"
-#include "Numbers.h"
-#include "MAXclses.h"
-#include "strings.h"
-#endif
-
-#ifdef ScripterExport
-	#undef ScripterExport
-#endif
-#define ScripterExport __declspec( dllexport )
-
 #include "dictionary.h"
+#include "imports.h"
 
-#ifdef __MAXSCRIPT_2012__
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 #include "maxscript\macros\define_external_functions.h"
 #include "maxscript\macros\define_instantiation_functions.h"
 #else
@@ -90,41 +74,61 @@
 #define			n_sorted				(Name::intern(_T("sorted")))
 #define			n_values				(Name::intern(_T("values")))
 
-visible_class_instance( Dictionary, _T("Dictionary") );
-Value*			DictionaryClass::apply( Value** arg_list, int count, CallContext* cc ) {
+visible_class_instance( Dictionary, "Dictionary" );
+
+Value * DictionaryClass::apply( Value** arg_list, int count, CallContext* cc )
+{
 	check_arg_count_with_keys( Dictionary, 0, count );
 	one_typed_value_local( Dictionary* out );
 	vl.out = new Dictionary();
 	return_value( vl.out );
 }
-Dictionary::Dictionary() { this->tag		= class_tag( Dictionary ); }
-Dictionary::Dictionary( Dictionary* other ) {
-	this->tag		= class_tag( Dictionary );
+
+Dictionary::Dictionary()
+{ tag		= class_tag( Dictionary ); }
+
+Dictionary::Dictionary( Dictionary* other )
+{
+	tag		= class_tag( Dictionary );
 
 	HashMapIterator iter;
 	for ( iter = other->_dict.begin(); iter != other->_dict.end(); iter++ )
-		this->_dict[ (*iter).first ] = (*iter).second;
+		_dict[ (*iter).first ] = (*iter).second;
 }
-Dictionary::~Dictionary() {}
-void			Dictionary::clear()			{ this->_dict.clear(); }
-Dictionary*		Dictionary::copy() {
+
+Dictionary::~Dictionary()
+{}
+
+void Dictionary::clear()
+{ _dict.clear(); }
+
+Dictionary * Dictionary::copy()
+{
 	one_typed_value_local( Dictionary* out );
 	vl.out = new Dictionary(this);
 	return_value( vl.out );
 }
-Value*			Dictionary::get( TSTR key, Value* fail ) {
-	HashMapIterator iter = this->_dict.find( Name::intern( key ) );
-	if ( iter != this->_dict.end() ) 
+
+Value * Dictionary::get( TSTR key, Value* fail )
+{
+	HashMapIterator iter = _dict.find( Name::intern( key ) );
+	if ( iter != _dict.end() ) 
 		return_protected( (*iter).second );
 	return fail;
 }
-bool			Dictionary::haskey( TSTR key )						{ return ( this->_dict.find( Name::intern(key) ) != this->_dict.end() ); }
-bool			Dictionary::isEmpty()								{ return ( this->length() == 0 ); }
-Array*			Dictionary::items() {
+
+bool Dictionary::haskey( TSTR key )
+{ return ( _dict.find( Name::intern(key) ) != _dict.end() ); }
+
+bool Dictionary::isEmpty()
+{ return length() == 0; }
+
+Array * Dictionary::items()
+{
 	two_typed_value_locals( Array* item, Array* out );
 	vl.out = new Array(0);
 	HashMapIterator iter;
-	for ( iter = this->_dict.begin(); iter != this->_dict.end(); iter++ ) {
+	for ( iter = _dict.begin(); iter != _dict.end(); iter++ ) {
 		vl.item = new Array(2);
 		vl.item->append( (*iter).first );
 		vl.item->append( (*iter).second );
@@ -132,12 +136,14 @@ Array*			Dictionary::items() {
 	}
 	return_value( vl.out );
 }
-Array*			Dictionary::keys( bool sorted ) {
+
+Array * Dictionary::keys( bool sorted )
+{
 	one_typed_value_local( Array* out );
 
-	vl.out = new Array(this->length());
+	vl.out = new Array(length());
 	HashMapIterator iter;
-	for ( iter = this->_dict.begin(); iter != this->_dict.end(); iter++ )
+	for ( iter = _dict.begin(); iter != _dict.end(); iter++ )
 		vl.out->append( (*iter).first );
 	
 	if ( sorted )
@@ -145,133 +151,153 @@ Array*			Dictionary::keys( bool sorted ) {
 
 	return_value( vl.out );
 }
-int				Dictionary::length()								{ return (int)this->_dict.size(); }
-Value*			Dictionary::pop( TSTR key ) {
-	HashMapIterator iter = this->_dict.find( Name::intern(key) );
-	if ( iter != this->_dict.end() ) {
+
+int Dictionary::length()
+{ return (int)_dict.size(); }
+
+Value * Dictionary::pop( TSTR key )
+{
+	HashMapIterator iter = _dict.find( Name::intern(key) );
+	if ( iter != _dict.end() ) {
 		one_value_local( out );
 		vl.out = (*iter).second;
-		this->_dict.erase(iter);
+		_dict.erase(iter);
 		return_value( vl.out );
 	}
 	return &undefined;
 }
-Array*			Dictionary::popitem( TSTR key ) {
-	HashMapIterator iter = this->_dict.find( Name::intern(key) );
-	if ( iter != this->_dict.end() ) {
+
+Array * Dictionary::popitem( TSTR key )
+{
+	HashMapIterator iter = _dict.find( Name::intern(key) );
+	if ( iter != _dict.end() ) {
 		one_typed_value_local( Array* out );
 		vl.out			= new Array(2);
 		vl.out->append( (*iter).first );
 		vl.out->append( (*iter).second );
-		this->_dict.erase(iter);
+		_dict.erase(iter);
 		return_value( vl.out );
 	}
 	return (Array*) &undefined;
 }
-bool			Dictionary::set( TSTR key, Value* val )				{ 
+
+bool Dictionary::set( TSTR key, Value* val )
+{
 	if ( val == this )
-		throw RuntimeError( "Cyclic storing of dictionary instance inside itself is not allowed" );
-	this->_dict[ Name::intern(key) ] = val->get_heap_ptr()->eval();
+		throw RuntimeError( _T("Cyclic storing of dictionary instance inside itself is not allowed") );
+	_dict[ Name::intern(key) ] = val->get_heap_ptr()->eval();
 	return true;
 }
-Array*			Dictionary::values( bool sorted ) {
+
+Array * Dictionary::values( bool sorted )
+{
 	if ( sorted ) {
 		one_typed_value_local( Array* out );
-		vl.out		= new Array(0);
-		Array* keys = this->keys( true );
+		vl.out = new Array(0);
+		Array * keys = this->keys( true );
 		for ( int i = 0; i < keys->size; i++ )
-			vl.out->append( this->_dict[ keys->data[i] ] );
+			vl.out->append( _dict[ keys->data[i] ] );
 		return_value( vl.out );
 	}
 	else {
 		one_typed_value_local( Array* out );
-		vl.out		= new Array(0);
+		vl.out = new Array(0);
 		HashMapIterator iter;
-		for ( iter = this->_dict.begin(); iter != this->_dict.end(); iter++ )
+		for ( iter = _dict.begin(); iter != _dict.end(); iter++ )
 			vl.out->append( (*iter).second );
 		return_value( vl.out );
 	}
 }
 //--------------------------------------	MAXScript Methods		---------------------------------------
 
-Value*			Dictionary::applyMethod( Value* methodID, Value** arg_list, int count, CallContext* cc ) {
+Value * Dictionary::applyMethod( Value* methodID, Value** arg_list, int count, CallContext* cc )
+{
 	if ( methodID == n_clear ) {
 		check_arg_count( clear, 0, count );
-		this->clear();
+		clear();
 		return &ok;
 	}
 	else if ( methodID == n_copy ) {
 		check_arg_count (copy, 0, count);
-		return this->copy();
+		return copy();
 	}
 	else if ( methodID == n_get ) {
 		check_arg_count_with_keys( get, 1, count );
 		Value* fail = key_arg_or_default( fail, &undefined );
-		return this->get( arg_list[0]->to_string(), fail );
+		return get( arg_list[0]->to_string(), fail );
 	}
 	else if ( methodID == n_haskey ) {
 		check_arg_count( haskey, 1, count );
-		Value* key = arg_list[0]->eval();	
-		return ( this->haskey( key->to_string() ) ) ? &true_value : &false_value;
+		Value* key = arg_list[0]->eval();
+		return haskey( key->to_string() ) ? &true_value : &false_value;
 	}
 	else if ( methodID == n_items ) {
 		check_arg_count ( items, 0, count);
-		return this->items();
+		return items();
 	}
 	else if ( methodID == n_keys ) {
 		check_arg_count_with_keys( keys, 0, count );
 		bool sorted = key_arg( sorted ) == &true_value;
-		return this->keys(sorted);
+		return keys(sorted);
 	}
 	else if ( methodID == n_pop ) {
 		check_arg_count( pop, 1, count );
-		return this->pop( arg_list[0]->to_string() );
+		return pop( arg_list[0]->to_string() );
 	}
 	else if ( methodID == n_popitem ) {
 		check_arg_count( popitem, 1, count );
-		return this->popitem( arg_list[0]->to_string() );
+		return popitem( arg_list[0]->to_string() );
 	}
 	else if ( methodID == n_set ) {
 		check_arg_count( set, 2, count );
-		return ( this->set( arg_list[0]->eval()->to_string(), arg_list[1]->eval() ) ) ? &true_value : &false_value;
+		return set( arg_list[0]->eval()->to_string(), arg_list[1]->eval() ) ? &true_value : &false_value;
 	}
 	else if ( methodID == n_values ) {
 		check_arg_count_with_keys( values, 0, count );
 		bool sorted = key_arg( sorted ) == &true_value;
-		return this->values(sorted);
+		return values(sorted);
 	}
 	return &undefined;
 }
-void			Dictionary::gc_trace() {
+
+void Dictionary::gc_trace()
+{
 	Value::gc_trace();
 
 	// trace sub-objects & mark me
 	HashMapIterator iter;
-	for(iter = this->_dict.begin(); iter != this->_dict.end(); iter++) {
+	for(iter = _dict.begin(); iter != _dict.end(); iter++) {
 		if ( (*iter).first && (*iter).first->is_not_marked() ) (*iter).first->gc_trace();
 		if ( (*iter).second && (*iter).second->is_not_marked() ) (*iter).second->gc_trace();
 	}
 }
-Value*			Dictionary::get_vf(Value** arg_list, int count)		{ return this->get( arg_list[0]->eval()->to_string(), &undefined ); }
-Value*			Dictionary::get_props_vf(Value** arg_list, int count) {
-	return &undefined;
-}
-Value*			Dictionary::put_vf( Value** arg_list, int count )	{ return this->set( arg_list[0]->eval()->to_string(), arg_list[1]->eval() ) ? &true_value : &false_value; }
-void			Dictionary::sprin1( CharStream* s ) {
+
+Value * Dictionary::get_vf(Value** arg_list, int count)
+{ return get( arg_list[0]->eval()->to_string(), &undefined ); }
+
+Value * Dictionary::get_props_vf(Value** arg_list, int count)
+{ return &undefined; }
+
+Value * Dictionary::put_vf( Value** arg_list, int count )
+{ return set( arg_list[0]->eval()->to_string(), arg_list[1]->eval() ) ? &true_value : &false_value; }
+
+void Dictionary::sprin1( CharStream* s )
+{
 	s->puts(_T("(Dictionary items:"));
-	this->items()->sprin1(s);
+	items()->sprin1(s);
 	s->puts(_T(")"));
 }
-Value*			Dictionary::show_props_vf(Value** arg_list, int count) {
-	return &ok;
-}
 
-Value*			Dictionary::get_property(Value** arg_list, int count) {
+Value * Dictionary::show_props_vf(Value** arg_list, int count)
+{ return &ok; }
+
+Value * Dictionary::get_property(Value** arg_list, int count)
+{
 	Value* prop = arg_list[0];
 
 	if		(prop == n_clear)			return ( NEW_GENERIC_METHOD( clear ) );
-	else if (prop == n_count)			return ( Integer::intern( this->length() ) );
-	else if (prop == n_copy)			return ( this->copy() );
+	else if (prop == n_count)			return ( Integer::intern( length() ) );
+	else if (prop == n_copy)			return ( copy() );
 	else if (prop == n_get)				return ( NEW_GENERIC_METHOD( get ) );
 	else if (prop == n_haskey)			return ( NEW_GENERIC_METHOD( haskey ) );
 	else if (prop == n_items)			return ( NEW_GENERIC_METHOD( items ) );
@@ -283,10 +309,12 @@ Value*			Dictionary::get_property(Value** arg_list, int count) {
 
 	return Value::get_property( arg_list, count );
 }
-Value*			Dictionary::map( node_map& m ) {
+
+Value * Dictionary::map( node_map& m )
+{
 	two_typed_value_locals( Array* item, Value* out );
 	HashMapIterator iter;
-	for ( iter = this->_dict.begin(); iter != this->_dict.end(); iter++ ) {
+	for ( iter = _dict.begin(); iter != _dict.end(); iter++ ) {
 		if ( m.vfn_ptr != NULL )
 			vl.out = ((*iter).second->*(m.vfn_ptr))(m.arg_list, m.count );
 		else {
@@ -310,7 +338,9 @@ Value*			Dictionary::map( node_map& m ) {
 	pop_value_locals();
 	return &ok;
 }
-Value*			Dictionary::set_property( Value** arg_list, int count ) {
+
+Value * Dictionary::set_property( Value** arg_list, int count )
+{
 	return Value::set_property( arg_list, count );
 }
 

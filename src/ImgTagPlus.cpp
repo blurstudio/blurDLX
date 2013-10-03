@@ -53,39 +53,19 @@ POSSIBILITY OF SUCH DAMAGE.
 
 */
 //*****************************************************************************
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\maxscript.h"
-#include "maxscript\maxwrapper\bitmaps.h"
-#include "maxscript\foundation\numbers.h"
-#include "maxscript\foundation\colors.h"
-#include "maxscript\foundation\3dmath.h"
-#include "maxscript\compiler\parser.h"
-#include "3dsmaxport.h"
-#include <WindowsX.h>
-#else
-#include "MAXScrpt.h"
-#include "BitMaps.h"
-#include "Numbers.h"
-#include "ColorVal.h"
-#include "3DMath.h"
-#include "Parser.h"
-#endif
-//#include "MXSAgni.h"
+
+#include "imports.h"
+#include "resource.h"
 
 extern HINSTANCE g_hInst;
 
-#include "resource.h"
 
-#ifdef ScripterExport
-	#undef ScripterExport
-#endif
-#define ScripterExport __declspec( dllexport )
-
-#ifdef __MAXSCRIPT_2012__
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 #include "maxscript\macros\define_instantiation_functions.h"
 #else
 #include "definsfn.h"
 #endif
+
 def_name ( click )
 def_name ( dblclick )
 def_name ( mousedown )
@@ -120,7 +100,7 @@ protected:
 	HFONT    m_hFont;
 	int		 m_size;
 	BOOL	 m_bold;
-	TCHAR*	 m_fontName;
+	TSTR	 m_fontName;
 
 	HBITMAP     m_hBitmap;
 	Value      *m_maxBitMap;
@@ -137,8 +117,8 @@ public:
 	~ImgTag();
 
 	int SetBitmap(Value *val);
-	void SetText(TCHAR *text);
-	void SetFont(TCHAR *nameFont, float size, BOOL bold);
+	void SetText(const TCHAR *text);
+	void SetFont(const TCHAR *nameFont, float size, BOOL bold);
 
 	TOOLINFO* GetToolInfo();
 	void Invalidate();
@@ -217,7 +197,7 @@ TOOLINFO* ImgTag::GetToolInfo()
 	ti.cbSize = sizeof(TOOLINFO);
 	ti.hwnd = m_hWnd;
 	ti.uId = TOOLTIP_ID;
-	ti.lpszText = (LPSTR)m_sToolTip;
+	ti.lpszText = (LPTSTR)(m_sToolTip.data());
 	GetClientRect(m_hWnd, &ti.rect);
 
 	return &ti;
@@ -400,7 +380,7 @@ LRESULT ImgTag::Paint(HDC hDC)
 
 		SetTextColor(hDC, m_color);
 		SelectFont(hDC, m_hFont);
- 		TextOut(hDC, 0, 0, text, (int)strlen(text));
+ 		TextOut(hDC, 0, 0, text, (int)_tcslen(text));
 
 		return FALSE;
 	}
@@ -486,13 +466,13 @@ int ImgTag::SetBitmap(Value *val)
 }
 
 // ============================================================================
-void ImgTag::SetFont(TCHAR *nameFont, float size, BOOL bold)
+void ImgTag::SetFont(const TCHAR *nameFont, float size, BOOL bold)
 {
 	LOGFONT lf;
 	GetObject(m_hFont, sizeof(LOGFONT), &lf);
 
 	// request a face name "Arial"
-	strcpy(lf.lfFaceName, nameFont);
+	_tcscpy(lf.lfFaceName, nameFont);
 
 	// request pixel-height font
 	lf.lfHeight = size; 
@@ -508,7 +488,7 @@ void ImgTag::SetFont(TCHAR *nameFont, float size, BOOL bold)
 }
 
 // ============================================================================
-void ImgTag::SetText(TCHAR *text)
+void ImgTag::SetText(const TCHAR *text)
 {
 	SetWindowText(m_hWnd, text);
 	Invalidate();
@@ -521,7 +501,7 @@ void ImgTag::add_control(Rollout *ro, HWND parent, HINSTANCE hInstance, int& cur
 {
 	caption = caption->eval();
 
-	TCHAR *text = caption->eval()->to_string();
+	const TCHAR *text = caption->eval()->to_string();
 	control_ID = next_id();
 	parent_rollout = ro;
 
@@ -604,7 +584,7 @@ void ImgTag::add_control(Rollout *ro, HWND parent, HINSTANCE hInstance, int& cur
 	GetObject(ro->font, sizeof(LOGFONT), &lf);
 	lf.lfHeight = m_size;						// request a 12-pixel-height font
 	lf.lfWeight = m_bold ? FW_BOLD : FW_NORMAL; // bold?
-	strcpy(lf.lfFaceName, m_fontName);				// request a face name "Arial"
+	_tcscpy(lf.lfFaceName, m_fontName.data());				// request a face name "Arial"
 
 	m_hFont = CreateFontIndirect(&lf);
 	SendDlgItemMessage(parent, control_ID, WM_SETFONT, (WPARAM)m_hFont, 0L);
@@ -823,16 +803,16 @@ Value* ImgTag::set_property(Value** arg_list, int count)
 	{
 		if(parent_rollout && parent_rollout->page)
 		{
-			TCHAR *text = val->to_string();
+			const TCHAR *text = val->to_string();
 			m_fontName = text;
-			SetFont(m_fontName, m_size, m_bold);
+			SetFont(m_fontName.data(), m_size, m_bold);
 			Invalidate();
 		}
 	}
 
 	else if (prop == n_text || prop == n_caption) // not displayed
 	{
-		TCHAR *text = val->to_string(); // will throw error if not convertable
+		const TCHAR *text = val->to_string(); // will throw error if not convertable
 		SetText(val->to_string());
 		caption = val->get_heap_ptr();
 	}
@@ -858,11 +838,11 @@ void ImgTag::set_enable()
 void ImgTagInit()
 {
 
-	#ifdef __MAXSCRIPT_2012__
-	#include "maxscript\macros\define_implementations.h"
-	#else
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
+	#include "macros/define_implementations.h"
+#else
 	#include "defimpfn.h"
-	#endif
+#endif
 	def_name ( click )
 	def_name ( dblclick )
 	def_name ( mousedown )
@@ -900,5 +880,5 @@ void ImgTagInit()
 		registered = TRUE;
 	}
 
-	install_rollout_control(Name::intern("ImgTagPlus"), ImgTag::create);
+	install_rollout_control(Name::intern(_T("ImgTagPlus")), ImgTag::create);
 }

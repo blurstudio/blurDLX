@@ -45,15 +45,9 @@
 #ifndef __DICTIONARY_H__
 #define __DICTIONARY_H__
 
-// max 2012 switched the name of maxscript includes
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\maxscript.h"
-#else
-#include "MAXScrpt.h"
-#endif
+#include "imports.h"
 #include "GenericMethod.h"
 #include <hash_map>
-
 
 #define _DEFINE_DEPRECATED_HASH_CLASSES 0
 
@@ -62,53 +56,53 @@ typedef HashMap::iterator HashMapIterator;
 
 applyable_class( Dictionary );
 class Dictionary : public AppliedValue {
-	private:
-		int					_length;
-		HashMap				_dict;
+private:
+	int					_length;
+	HashMap				_dict;
 
-	public:
-							Dictionary();
-							Dictionary( Dictionary* other );
-							~Dictionary();
+public:
+	Dictionary();
+	Dictionary( Dictionary* other );
+	~Dictionary();
 
-		//---------------------------------			C++ Methods			-----------------------------------------
-		void				clear();
-		Dictionary*			copy();
-		Value*				get( TSTR key, Value* fail = NULL );
-		bool				haskey( TSTR key );
-		bool				isEmpty();
-		Array*				items();
-		Array*				keys( bool sorted = false );
-		int					length();
-		Value*				pop( TSTR key );
-		Array*				popitem( TSTR key );
-		bool				set( TSTR key, Value* val );
-		Array*				values( bool sorted = false );
+	//---------------------------------			C++ Methods			-----------------------------------------
+	void				clear();
+	Dictionary*			copy();
+	Value*				get( TSTR key, Value* fail = NULL );
+	bool				haskey( TSTR key );
+	bool				isEmpty();
+	Array*				items();
+	Array*				keys( bool sorted = false );
+	int					length();
+	Value*				pop( TSTR key );
+	Array*				popitem( TSTR key );
+	bool				set( TSTR key, Value* val );
+	Array*				values( bool sorted = false );
 
-		//---------------------------------		MAXScript Methods		-----------------------------------------
-							classof_methods( Dictionary, Value );
-		void				collect() { delete this; }
-		BOOL				_is_collection() { return TRUE; }
-		void				sprin1(CharStream* s);
-		void				gc_trace();
+	//---------------------------------		MAXScript Methods		-----------------------------------------
+						classof_methods( Dictionary, Value );
+	void				collect() { delete this; }
+	BOOL				_is_collection() { return TRUE; }
+	void				sprin1(CharStream* s);
+	void				gc_trace();
 
 #define						is_dictionary(p) ((p)->tag == class_tag(Dictionary))
 
-		Value*				applyMethod( Value* methodID, Value** arg_list, int count, CallContext* cc = NULL );
-		Value*				get_props_vf(Value** arg_list, int count);
-		Value*				get_property(Value** arg_list, int count);
-		Value*				map(node_map& m);
-		Value*				set_property( Value** arg_list, int count );
+	Value*				applyMethod( Value* methodID, Value** arg_list, int count, CallContext* cc = NULL );
+	Value*				get_props_vf(Value** arg_list, int count);
+	Value*				get_property(Value** arg_list, int count);
+	Value*				map(node_map& m);
+	Value*				set_property( Value** arg_list, int count );
 
-	// max 2012 switched the name of maxscript includes
-	#ifdef __MAXSCRIPT_2012__
+// max 2012 switched the name of maxscript includes
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 	#include "maxscript\macros\define_implementations.h"
-	#else
+#else
 	#include "defimpfn.h"
-	#endif
-		def_generic  ( get,		"get"); 
-		def_generic  ( put,		"put");
-		def_generic  ( show_props, "showProperties");
+#endif
+	def_generic( get, "get");
+	def_generic( put, "put");
+	def_generic( show_props, "showProperties");
 };
 
 #endif __DICTIONARY_H__

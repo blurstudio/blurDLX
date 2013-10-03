@@ -43,31 +43,11 @@
 				POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\maxscript.h"
-#include "maxscript\UI\rollouts.h"
-#include "maxscript\foundation\numbers.h"
-#include "maxscript\foundation\3dmath.h"
-#include "maxscript\maxwrapper\mxsobjects.h"
-#include "maxscript\maxwrapper\maxclasses.h"
-#else
-#include "MAXScrpt.h"
-#include "Rollouts.h"
-#include "Numbers.h"
-#include "3DMath.h"
-#include "MAXObj.h"
-#include "MAXclses.h"
-#endif
-
-#ifdef ScripterExport
-	#undef ScripterExport
-#endif
-#define ScripterExport __declspec( dllexport )
-
+#include "imports.h"
 #include "resource.h"
 #include "BoundingBox.h"
 
-#ifdef __MAXSCRIPT_2012__
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 #include "maxscript\macros\define_external_functions.h"
 #else
 #include "defextfn.h"
@@ -75,7 +55,7 @@
 	//def_name ( BBox3 )
 /*#	include "namedefs.h"*/
 
-#ifdef __MAXSCRIPT_2012__
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 #include "maxscript\macros\define_instantiation_functions.h"
 #else
 #include "definsfn.h"
@@ -89,7 +69,7 @@
 
 /* ------------------- BBox3ValueClass  instance -------------- */
 
-visible_class_instance (BBox3Value, _T("BBox3"))
+visible_class_instance(BBox3Value, "BBox3")
 
 Value* BBox3ValueClass::apply(Value** arg_list, int count, CallContext* cc)
 {
@@ -245,11 +225,11 @@ Value* BBox3Value::intersects_vf(Value** arg_list, int count)
 
 void BBox3ValueInit()
 {
-	#ifdef __MAXSCRIPT_2012__
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 	#include "maxscript\macros\define_implementations.h"
-	#else
+#else
 	#include "defimpfn.h"
-	#endif
+#endif
 		def_name ( BBox3 )
 		def_name ( Outside )
 		def_name ( isEqual )

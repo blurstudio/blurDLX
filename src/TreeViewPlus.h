@@ -1,5 +1,6 @@
+
 // String Definitions
-#define			S_TREEVIEW				_T( "TreeViewPlus")
+#define S_TREEVIEW "TreeViewPlus"
 
 // Window Classes
 #define			TREEVIEW_WINDOWCLASS	WC_TREEVIEW
@@ -249,7 +250,7 @@ class TreeViewItemPlus : public AppliedValue {
 
 		Value*				applyMethod( Value* methodID, Value** arg_list, int count, CallContext* cc );
 
-#ifdef __MAXSCRIPT_2012__
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 #include "maxscript\macros\define_implementations.h"
 #else
 #include "defimpfn.h"

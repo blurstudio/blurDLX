@@ -43,42 +43,30 @@
 				POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\maxscript.h"
-#include "maxscript\foundation\numbers.h"
-#include "maxscript\maxwrapper\mxsobjects.h"
-#include "maxscript\maxwrapper\maxclasses.h"
-#else
-#include "MAXScrpt.h"
-#include "Numbers.h"
-#include "MAXObj.h"
-#include "MAXclses.h"
-#endif
+#include "imports.h"
 
 #include "GenericMethod.h"
 
 // external name definitions
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\macros\define_external_functions.h"
+#if defined(__MAXSCRIPT_2012__) || defined(__MAXSCRIPT_2013__)
+#include "macros/define_external_functions.h"
+#include "macros/define_instantiation_functions.h"
 #else
 #include "defextfn.h"
-#endif
-
-// internal name definitions
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\macros\define_instantiation_functions.h"
-#else
 #include "definsfn.h"
 #endif
+
 
 AppliedValue::AppliedValue() {
 }
 
-void AppliedValue::sprin1(CharStream* s) {
+void AppliedValue::sprin1(CharStream* s)
+{
 	s->puts( _T( "AppliedValue" ) );
 }
-void AppliedValue::gc_trace() { Value::gc_trace(); }
+
+void AppliedValue::gc_trace()
+{ Value::gc_trace(); }
 
 //----------------------------------------------------------------------------------------------------
 
@@ -88,30 +76,42 @@ AppliedControl::AppliedControl( Value* name, Value* caption, Value** keyparms, i
 void AppliedControl::sprin1(CharStream* s) {
 	s->puts( _T( "AppliedControl" ) );
 }
+
 void AppliedControl::gc_trace() { RolloutControl::gc_trace(); }
 
 //----------------------------------------------------------------------------------------------------
 
-GenericMethod::GenericMethod( AppliedValue* target, Value* methodID ) {
-	this->target	= target;
-	this->methodID	= methodID;
+GenericMethod::GenericMethod( AppliedValue* target, Value* methodID )
+{
+	target	= target;
+	methodID	= methodID;
 }
-GenericMethod::~GenericMethod() {}
-void GenericMethod::gc_trace() {
+
+GenericMethod::~GenericMethod()
+{}
+
+void GenericMethod::gc_trace()
+{
 	Value::gc_trace();
 
-	if (this->target	&& this->target->is_not_marked())		this->target->gc_trace();
-	if (this->methodID	&& this->methodID->is_not_marked())		this->methodID->gc_trace();
+	if (target	&& target->is_not_marked())
+		target->gc_trace();
+	if (methodID && methodID->is_not_marked())
+		methodID->gc_trace();
 }
-void GenericMethod::sprin1(CharStream* s) {
-	if ( this->methodID != &undefined ) {
-		s->puts( this->methodID->to_string() );
+
+void GenericMethod::sprin1(CharStream* s)
+{
+	if ( methodID != &undefined ) {
+		s->puts( methodID->to_string() );
 		s->puts(_T("()"));
 	}
 	else
 		s->puts( _T("GenericMethod <undefined>") );
 }
-Value* GenericMethod::apply(Value** arg_list, int count, CallContext* cc) {
+
+Value * GenericMethod::apply(Value** arg_list, int count, CallContext* cc)
+{
 	init_thread_locals();
 	push_alloc_frame();
 	Value** new_arg_list;
@@ -120,7 +120,7 @@ Value* GenericMethod::apply(Value** arg_list, int count, CallContext* cc) {
 	for ( int i = 0; i < count; i++ )
 		new_arg_list[i] = arg_list[i]->eval();
 
-	Value* result = this->target->applyMethod( this->methodID, new_arg_list, count, cc );
+	Value* result = target->applyMethod( methodID, new_arg_list, count, cc );
 
 	pop_value_local_array( new_arg_list );
 	pop_alloc_frame();
@@ -130,26 +130,35 @@ Value* GenericMethod::apply(Value** arg_list, int count, CallContext* cc) {
 
 //----------------------------------------------------------------------------------------------------
 
-GenericControlMethod::GenericControlMethod( AppliedControl* target, Value* methodID ) {
-	this->target	= target;
-	this->methodID	= methodID;
+GenericControlMethod::GenericControlMethod( AppliedControl* target, Value* methodID )
+{
+	target	= target;
+	methodID	= methodID;
 }
-GenericControlMethod::~GenericControlMethod() {}
-void GenericControlMethod::gc_trace() {
+
+GenericControlMethod::~GenericControlMethod()
+{}
+
+void GenericControlMethod::gc_trace()
+{
 	Value::gc_trace();
 
-	if (this->target && this->target->is_not_marked())		this->target->gc_trace();
-	if (this->methodID && this->methodID->is_not_marked())	this->methodID->gc_trace();
+	if (target && target->is_not_marked())		target->gc_trace();
+	if (methodID && methodID->is_not_marked())	methodID->gc_trace();
 }
-void GenericControlMethod::sprin1(CharStream* s) {
-	if ( this->methodID != &undefined ) {
-		s->puts( this->methodID->to_string() );
+
+void GenericControlMethod::sprin1(CharStream* s)
+{
+	if ( methodID != &undefined ) {
+		s->puts( methodID->to_string() );
 		s->puts(_T("()"));
 	}
 	else
 		s->puts( _T("GenericMethod <undefined>") );
 }
-Value* GenericControlMethod::apply(Value** arg_list, int count, CallContext* cc) {
+
+Value* GenericControlMethod::apply(Value** arg_list, int count, CallContext* cc)
+{
 	init_thread_locals();
 	push_alloc_frame();
 	Value** new_arg_list;
@@ -158,7 +167,7 @@ Value* GenericControlMethod::apply(Value** arg_list, int count, CallContext* cc)
 	for ( int i = 0; i < count; i++ )
 		new_arg_list[i] = arg_list[i]->eval();
 
-	Value* result = this->target->applyMethod( this->methodID, new_arg_list, count, cc );
+	Value* result = target->applyMethod( methodID, new_arg_list, count, cc );
 
 	pop_value_local_array( new_arg_list );
 	pop_alloc_frame();

@@ -54,17 +54,8 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 //*****************************************************************************
 
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\maxscript.h"
-#include "maxscript\foundation\numbers.h"
-#include "maxscript\compiler\parser.h"
-#include "icolorman.h"
-#include <WindowsX.h>
-#else
-#include "MAXScrpt.h"
-#include "Numbers.h"
-#include "Parser.h"
-#endif
+#include "imports.h"
+
 #include "3dsmaxport.h"
 
 // ============================================================================
@@ -76,16 +67,11 @@ extern COLORREF LightenColour(COLORREF col, double factor);
 
 #include "resource.h"
 
-#ifdef ScripterExport
-	#undef ScripterExport
-#endif
-#define ScripterExport __declspec( dllexport )
-
 #define LISTBOXCTRL_WINDOWCLASS _T("LISTBOXCTRL_WINDOWCLASS")
 #define TOOLTIP_ID 1
 
 
-#ifdef __MAXSCRIPT_2012__
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 #include "maxscript\macros\define_instantiation_functions.h"
 #else
 #include "definsfn.h"
@@ -95,7 +81,7 @@ extern COLORREF LightenColour(COLORREF col, double factor);
 	def_name ( escpressed )
 	def_name ( enterPressed )
 
-#ifdef __MAXSCRIPT_2012__
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 #include "maxscript\macros\define_external_functions.h"
 #else
 #include "defextfn.h"
@@ -126,7 +112,7 @@ protected:
 	HWND		m_hWnd;
 	HFONT		m_hFont;
 	int			m_size;
-	TCHAR*		m_fontName;
+	TSTR		m_fontName;
 	BOOL		m_multiSelection;
 	COLORREF	m_DefaultColor;
 	COLORREF	m_DefaultBkColor;
@@ -172,7 +158,7 @@ public:
 	void unSelectItem(int ItemID);
 	int getItemId(int xPos, int yPos);
 
-	void SetFont(TCHAR *nameFont, float size, BOOL bold);
+	void SetFont(const TCHAR *nameFont, float size, BOOL bold);
 
 	// MAXScript event handlers
 	ListBoxPlusControl(Value* name, Value* caption, Value** keyparms, int keyparm_count);
@@ -615,7 +601,7 @@ LRESULT ListBoxPlusControl::Paint()
 		itemRect.top = (text_height * i) + 1;
 		itemRect.bottom = (text_height * (i+1));
 
-		TCHAR* text = m_item_array->data[i]->to_string();
+		const TCHAR* text = m_item_array->data[i]->to_string();
 		bool selected = (*m_selection)[i] == 1;
 		bool indeterminate = (*m_indeterminate)[i] == 1;
 		
@@ -638,7 +624,7 @@ LRESULT ListBoxPlusControl::Paint()
 		SelectFont(hDC, m_hFont);
 		SetTextColor(hDC, m_color);
 
-		DrawText(hDC, text, (int)strlen(text), &itemRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		DrawText(hDC, text, (int)_tcslen(text), &itemRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
 		DeleteObject(hpen);
 		DeleteObject(bkBrush);
@@ -670,7 +656,7 @@ void ListBoxPlusControl::add_control(Rollout *ro, HWND parent, HINSTANCE hInstan
 /*	HWND	label;
 	int		left, top, width, height;
 	SIZE	size;*/
-	TCHAR *label_text = caption->eval()->to_string();
+	const TCHAR *label_text = caption->eval()->to_string();
 
 	parent_rollout = ro;
 	control_ID = next_id();
@@ -695,7 +681,7 @@ void ListBoxPlusControl::add_control(Rollout *ro, HWND parent, HINSTANCE hInstan
 	LOGFONT lf;
 	GetObject(ro->font, sizeof(LOGFONT), &lf);
 	lf.lfHeight = m_size;					
-	strcpy(lf.lfFaceName, m_fontName);
+	_tcscpy(lf.lfFaceName, m_fontName.data());
 	m_hFont = CreateFontIndirect(&lf);
 
 	SendDlgItemMessage(parent, control_ID, WM_SETFONT, (WPARAM)m_hFont, 0L);
@@ -882,7 +868,7 @@ Value* ListBoxPlusControl::set_property(Value** arg_list, int count)
 		if(parent_rollout && parent_rollout->page)
 		{
 			m_size = val->to_int();
-			SetFont(m_fontName, m_size, false);
+			SetFont(m_fontName.data(), m_size, false);
 			Invalidate();
 		}
 	}
@@ -890,9 +876,9 @@ Value* ListBoxPlusControl::set_property(Value** arg_list, int count)
 	{
  		if(parent_rollout && parent_rollout->page)
 		{
-			TCHAR *text = val->to_string();
+			const TCHAR *text = val->to_string();
 			m_fontName = text;
-			SetFont(m_fontName, m_size, false);
+			SetFont(m_fontName.data(), m_size, false);
 			Invalidate();
 		}
 	}
@@ -933,13 +919,13 @@ void ListBoxPlusControl::set_enable()
 
 
 // ============================================================================
-void ListBoxPlusControl::SetFont(TCHAR *nameFont, float size, BOOL bold)
+void ListBoxPlusControl::SetFont(const TCHAR *nameFont, float size, BOOL bold)
 {
 	LOGFONT lf;
 	GetObject(m_hFont, sizeof(LOGFONT), &lf);
 
 	// request a face name "Arial"
-	strcpy(lf.lfFaceName, nameFont);
+	_tcscpy(lf.lfFaceName, nameFont);
 
 	// request pixel-height font
 	lf.lfHeight = size; 
@@ -958,11 +944,11 @@ void ListBoxPlusControl::SetFont(TCHAR *nameFont, float size, BOOL bold)
 // ============================================================================
 void ListBoxPlusCtrlInit()
 {
-	#ifdef __MAXSCRIPT_2012__
-	#include "maxscript\macros\define_implementations.h"
-	#else
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
+	#include "macros/define_implementations.h"
+#else
 	#include "defimpfn.h"
-	#endif
+#endif
 		def_name ( multiSelection )
 		def_name ( locked )
 		def_name ( escpressed )
@@ -993,6 +979,6 @@ void ListBoxPlusCtrlInit()
 		registered = TRUE;
 	}
 
-	install_rollout_control(Name::intern("ListBoxPlus"), ListBoxPlusControl::create);
+	install_rollout_control(Name::intern(_T("ListBoxPlus")), ListBoxPlusControl::create);
 }
 

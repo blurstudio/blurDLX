@@ -14,7 +14,7 @@
 
 
 // String Definitions
-#define s_treeview				_T("TreeViewControl")
+#define s_treeview "TreeViewControl"
 //-----
 
 
@@ -95,7 +95,7 @@ public:
 	void	Invalidate();
 
 	// MAXScript event handlers
-	         classof_methods(TreeViewControl, RolloutControl);
+	classof_methods(TreeViewControl, RolloutControl);
 
 	// Garbage collection
 	void	 collect() { delete this; }
@@ -112,18 +112,19 @@ public:
 	Value*   get_property(Value** arg_list, int count);
 	Value*   set_property(Value** arg_list, int count);
 
-	def_generic (get,		"get");
 //	def_generic (put,		"put");
 
 	Value*   addItem(Value** arg_list, int count);
 
 	void     set_enable();
 
-	#ifdef __MAXSCRIPT_2012__
-	#include "maxscript\macros\define_implementations.h"
-	#else
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
+	#include "macros/define_implementations.h"
+#else
 	#include "defimpfn.h"
-	#endif
+#endif
+	def_generic (get,"get");
+
 	def_generic		( get_props,	"getPropNames" );
 	def_generic		( show_props,	"showProperties" );
 	def_visible_generic ( show_methods, "showMethods");
@@ -176,10 +177,10 @@ public:
 
 	Value*		applyMethod( Value* methodID, Value** arg_list, int count, CallContext* cc );
 
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\macros\define_implementations.h"
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
+	#include "macros/define_implementations.h"
 #else
-#include "defimpfn.h"
+	#include "defimpfn.h"
 #endif
 	def_generic		( get_props,	"getPropNames" );
 	def_generic		( show_props,	"showProperties" );

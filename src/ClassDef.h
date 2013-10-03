@@ -15,16 +15,8 @@
 #ifndef _CLASSDEF_H_
 #define _CLASSDEF_H_
 
-// max 2012 switched the name of maxscript includes
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\maxscript.h"
-#include "maxscript\foundation\functions.h"
-#include "maxscript\foundation\streams.h"
-#else
-#include "MAXScrpt.h"
-#include "funcs.h"
-#include "streams.h"
-#endif
+#include "imports.h"
+
 #include "resource.h"
 #include "GenericMethod.h"
 
@@ -113,7 +105,7 @@ class ClassDef : public AppliedValue {
 		//								MAXScript Functions (default maxscript functions that call the above methods)
 		//---------------------------------------------------------------------------------------------------------------------------------
 # define							is_classdef(o) ((o)->tag == class_tag( ClassDef ))
-#ifdef __MAXSCRIPT_2012__
+#if defined(__MAXSCRIPT_2012__) || defined(__MAXSCRIPT_2013__)
 #include "maxscript\macros\define_implementations.h"
 #else
 #include "defimpfn.h"
@@ -195,7 +187,7 @@ class ClassValue : public AppliedValue {
 		//								MAXScript Functions (default maxscript functions that call the above methods)
 		//---------------------------------------------------------------------------------------------------------------------------------
 # define							is_classvalue(o) ((o)->tag == class_tag( ClassValue ))
-#ifdef __MAXSCRIPT_2012__
+#if defined(__MAXSCRIPT_2012__) || defined(__MAXSCRIPT_2013__)
 #include "maxscript\macros\define_implementations.h"
 #else
 #include "defimpfn.h"
@@ -251,7 +243,7 @@ class ClassMethod : public Value {
 		ScripterExport void			sprin1( CharStream* s )		{ if ( this->functionInst ) this->functionInst->sprin1( s ); }
 
 		// MAXScript usage methods
-#ifdef __MAXSCRIPT_2012__
+#if defined(__MAXSCRIPT_2012__) || defined(__MAXSCRIPT_2013__)
 #include "maxscript\macros\define_implementations.h"
 #else
 #include "defimpfn.h"

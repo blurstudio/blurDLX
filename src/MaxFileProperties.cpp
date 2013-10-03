@@ -43,42 +43,19 @@
 				POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\maxscript.h"
-#include "maxscript\UI\rollouts.h"
-#include "maxscript\foundation\numbers.h"
-#include "maxscript\foundation\3dmath.h"
-#include "maxscript\maxwrapper\mxsobjects.h"
-#include "maxscript\maxwrapper\maxclasses.h"
-#include "maxscript\compiler\parser.h"
-extern TCHAR* GetString(int id);
-#else
-#include "MAXScrpt.h"
-#include "Rollouts.h"
-#include "Numbers.h"
-#include "3DMath.h"
-#include "MAXObj.h"
-#include "MAXclses.h"
-#include "Parser.h"
-#endif
-
-
-#ifdef ScripterExport
-	#undef ScripterExport
-#endif
-#define ScripterExport __declspec( dllexport )
+#include "imports.h"
 
 #include "MaxFileProperties.h"
 #include "Resource.h"
 
-#ifdef __MAXSCRIPT_2012__
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 #include "maxscript\macros\define_external_functions.h"
 #else
 #include "defextfn.h"
 #endif
 	def_name ( maxfileproperties )
 
-#ifdef __MAXSCRIPT_2012__
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 #include "maxscript\macros\define_instantiation_functions.h"
 #else
 #include "definsfn.h"
@@ -137,65 +114,76 @@ extern TCHAR* GetString(int id);
 #define PID_HEADINGPAIR			0x0000000C
 #define PID_DOCPARTS			0x0000000D
 
-void TypeNameFromVariant(PROPVARIANT* pProp, char* szString, int bufSize)
+TSTR TypeNameFromVariant(PROPVARIANT* pProp)
 {
-switch (pProp->vt) {
-	case VT_LPWSTR:
-	case VT_LPSTR:
-		strcpy(szString, GetString(IDS_TYPE_TEXT));
-		break;
-	case VT_I4:
-	case VT_R4:
-	case VT_R8:
-		strcpy(szString, GetString(IDS_TYPE_NUMBER));
-		break;
-	case VT_BOOL:
-		strcpy(szString, GetString(IDS_TYPE_BOOL));
-		break;
-	case VT_FILETIME:
-		strcpy(szString, GetString(IDS_TYPE_DATE));
-		break;
-	default:
-		strcpy(szString, "");
-		break;
+	switch (pProp->vt) {
+		case VT_LPWSTR:
+		case VT_LPSTR:
+			return GetString(IDS_TYPE_TEXT);
+		case VT_I4:
+		case VT_R4:
+		case VT_R8:
+			return GetString(IDS_TYPE_NUMBER);
+		case VT_BOOL:
+			return GetString(IDS_TYPE_BOOL);
+			break;
+		case VT_FILETIME:
+			return GetString(IDS_TYPE_DATE);
+			break;
+		default:
+			break;
 	}
+	return TSTR();
 }
 
-void VariantToString(PROPVARIANT* pProp, char* szString, int bufSize)
+TSTR VariantToString(PROPVARIANT* pProp)
 {
-switch (pProp->vt) {
-	case VT_LPWSTR:
-		wcstombs(szString, pProp->pwszVal, bufSize);
-		break;
-	case VT_LPSTR:
-		strcpy(szString, pProp->pszVal);
-		break;
-	case VT_I4:
-		sprintf(szString, "%ld", pProp->lVal);
-		break;
-	case VT_R4:
-		sprintf(szString, "%f", pProp->fltVal);
-		break;
-	case VT_R8:
-		sprintf(szString, "%lf", pProp->dblVal);
-		break;
-	case VT_BOOL:
-		sprintf(szString, "%s", pProp->boolVal ? GetString(IDS_VAL_YES) : GetString(IDS_VAL_NO));
-		break;
-	case VT_FILETIME:
-		SYSTEMTIME sysTime;
-		FileTimeToSystemTime(&pProp->filetime, &sysTime);
-		GetDateFormat(LOCALE_SYSTEM_DEFAULT,
-						DATE_SHORTDATE,
-						&sysTime,
-						NULL,
-						szString,
-						bufSize);
-		break;
-	default:
-		strcpy(szString, "");
-		break;
+	switch (pProp->vt) {
+		case VT_LPWSTR:
+			return TSTR::FromUTF16(pProp->pwszVal);
+		case VT_LPSTR:
+			return TSTR::FromACP(pProp->pszVal);
+		case VT_I4:
+		{
+			TSTR ret;
+			ret.printf( _T("%ld"), pProp->lVal );
+			return ret;
+		}
+		case VT_R4:
+		{
+			TSTR ret;
+			ret.printf( _T("%f"), pProp->fltVal );
+			return ret;
+		}
+		case VT_R8:
+		{
+			TSTR ret;
+			ret.printf( _T("%lf"), pProp->dblVal );
+			return ret;
+		}
+		case VT_BOOL:
+		{
+			TSTR ret;
+			ret.printf( _T("%s"), pProp->boolVal ? GetString(IDS_VAL_YES) : GetString(IDS_VAL_NO) );
+			return ret;
+		}
+		case VT_FILETIME:
+		{
+			TSTR ret;
+			SYSTEMTIME sysTime;
+			FileTimeToSystemTime(&pProp->filetime, &sysTime);
+			GetDateFormat(LOCALE_SYSTEM_DEFAULT,
+							DATE_SHORTDATE,
+							&sysTime,
+							NULL,
+							ret.dataForWrite(128),
+							128);
+			return ret;
+		}
+		default:
+			break;
 	}
+	return TSTR();
 }
 
 // ============================================================================
@@ -205,17 +193,6 @@ visible_class_instance(MaxFileProperties, "MaxFileProperties");
 // ============================================================================
 MaxFileProperties::MaxFileProperties()
 {
-	TSTR m_filename = _T("");
-	TSTR m_title	= _T("");
-	TSTR m_subject	= _T("");
-	TSTR m_author	= _T("");
-	TSTR m_keywords = _T("");
-	TSTR m_comments = _T("");
-
-	TSTR m_manager	= _T("");
-	TSTR m_company	= _T("");
-	TSTR m_category = _T("");
-
 	m_summaryInfo			= new Array(0);
 	m_documentSummaryInfo	= new Array(0);
 	m_general				= new Array(0);
@@ -225,14 +202,14 @@ MaxFileProperties::MaxFileProperties()
 	m_objects				= new Array(0);
 	m_materials				= new Array(0);
 	m_usedPlugins			= new Array(0);
-	m_renderData			= new Array(0); 
-	m_userDefinedProperties = new Array(0); 
+	m_renderData			= new Array(0);
+	m_userDefinedProperties = new Array(0);
 }
 
 // ============================================================================
 void MaxFileProperties::sprin1(CharStream* s)
 {
-	s->printf(_T("<MaxFileProperties:%s>"), (TCHAR*)this->m_filename);
+	s->printf(_T("<MaxFileProperties:%s>"), (const TCHAR*)m_filename);
 }
 
 
@@ -277,54 +254,53 @@ Value* MaxFileProperties::get_property(Value** arg_list, int count)
 	Value* prop = arg_list[0];
 
 	if (prop == n_filename)
-		return new String(this->m_filename);
+		return new String(m_filename);
 	else if (prop == n_summaryInfo)
-		return this->m_summaryInfo;
+		return m_summaryInfo;
 	else if (prop == n_documentSummaryInfo)
-		return this->m_documentSummaryInfo;
+		return m_documentSummaryInfo;
 	else if (prop == n_userDefinedProperties)
-		return this->m_userDefinedProperties;
+		return m_userDefinedProperties;
 	else if (prop == n_general)
-		return this->m_general;
+		return m_general;
 	else if (prop == n_meshTotals)
-		return this->m_meshTotals;
+		return m_meshTotals;
 	else if (prop == n_sceneTotals)
-		return this->m_sceneTotals;
+		return m_sceneTotals;
 	else if (prop == n_externalDependences)
-		return this->m_externalDependences;
+		return m_externalDependences;
 	else if (prop == n_objects)
-		return this->m_objects;
+		return m_objects;
 	else if (prop == n_materials)
-		return this->m_materials;
+		return m_materials;
 	else if (prop == n_usedPlugins)
-		return this->m_usedPlugins;
+		return m_usedPlugins;
 	else if (prop == n_renderData)
-		return this->m_renderData;
+		return m_renderData;
 
 	else if (prop == n_title)
-		return new String(this->m_title);
+		return new String(m_title);
 	else if (prop == n_subject)
-		return new String(this->m_subject);
+		return new String(m_subject);
 	else if (prop == n_author)
-		return new String(this->m_author);
+		return new String(m_author);
 	else if (prop == n_keywords)
-		return new String(this->m_keywords);
+		return new String(m_keywords);
 	else if (prop == n_comments)
-		return new String(this->m_comments);
+		return new String(m_comments);
 
 	else if (prop == n_manager)
-		return new String(this->m_manager);
+		return new String(m_manager);
 	else if (prop == n_company)
-		return new String(this->m_company);
+		return new String(m_company);
 	else if (prop == n_category)
-		return new String(this->m_category);
+		return new String(m_category);
 
 	return &undefined;
 }
 
 Value* MaxFileProperties::show_props_vf(Value** arg_list, int count)
 {
-
 	return &ok;
 }
 
@@ -355,6 +331,12 @@ Value* MaxFileProperties::get_props_vf(Value** arg_list, int count)
 	return propNames;
 }
 
+static TSTR tstrFromPropVar( const PROPVARIANT & propVar )
+{
+	if( propVar.vt == VT_LPSTR )
+		return TSTR::FromACP(propVar.pszVal);
+	return TSTR();
+}
 
 //getmaxfileproperties "C:/temp/temp.max"
 def_struct_primitive( getmaxfileproperties, blurUtil, "getmaxfileproperties");
@@ -368,15 +350,19 @@ Value* getmaxfileproperties_cf(Value** arg_list, int count)
 	IPropertyStorage*		pSummaryInfoStorage = NULL;
 	IPropertyStorage*		pDocumentSummaryInfoStorage = NULL;
 	IPropertyStorage*		pUserDefinedPropertyStorage = NULL;
-	wchar_t					wfilename[_MAX_PATH];
-	char					szBuf[256];
-	TCHAR*					filename = arg_list[0]->to_string();
-
+	const TCHAR*			filename = arg_list[0]->to_string();
 	mProps->m_filename = filename;
 
+#ifdef UNICODE
+#define wfilename filename
+#else
+	wchar_t wfilename[_MAX_PATH];
 	MultiByteToWideChar(CP_ACP, 0, filename, -1, wfilename, _MAX_PATH);
+#endif
+
 	HRESULT	res = StgOpenStorage(wfilename, (LPSTORAGE)0, STGM_DIRECT|STGM_READ|STGM_SHARE_EXCLUSIVE,	NULL,0,&pStorage);
-	if (res!=S_OK) 
+#undef wfilename
+	if (res!=S_OK)
 	{
 		return mProps;
 	}
@@ -413,77 +399,19 @@ Value* getmaxfileproperties_cf(Value** arg_list, int count)
 
 		HRESULT hr = pSummaryInfoStorage->ReadMultiple(5, PropSpec, PropVar);
 		
-		Value* propVar;
-
-		if (S_OK == hr) 
+		if (S_OK == hr)
 		{
-			if (PropVar[0].vt == VT_LPSTR) 
-			{
-				propVar = new String (PropVar[0].pszVal);
-				mProps->m_summaryInfo->append(propVar);
-				mProps->m_title = PropVar[0].pszVal;
-			}
-			else
-			{
-				propVar = new String (_T(""));
-				mProps->m_summaryInfo->append(propVar);
-			}
-
-			if (PropVar[1].vt == VT_LPSTR) 
-			{
-				propVar = new String (PropVar[1].pszVal);
-				mProps->m_summaryInfo->append(propVar);
-				mProps->m_subject = PropVar[1].pszVal;
-			}
-			else
-			{
-				propVar = new String (_T(""));
-				mProps->m_summaryInfo->append(propVar);
-			}
-
-			if (PropVar[2].vt == VT_LPSTR) 
-			{
-				propVar = new String (PropVar[2].pszVal);
-				mProps->m_summaryInfo->append(propVar);
-				mProps->m_author = PropVar[2].pszVal;
-			}
-			else
-			{
-				propVar = new String (_T(""));
-				mProps->m_summaryInfo->append(propVar);
-			}
-			
-			if (PropVar[3].vt == VT_LPSTR) 
-			{
-				propVar = new String (PropVar[3].pszVal);
-				mProps->m_summaryInfo->append(propVar);
-				mProps->m_keywords = PropVar[3].pszVal;
-			}
-			else
-			{
-				propVar = new String (_T(""));
-				mProps->m_summaryInfo->append(propVar);
-			}
-
-			if (PropVar[4].vt == VT_LPSTR) 
-			{
-				propVar = new String (PropVar[4].pszVal);
-				mProps->m_summaryInfo->append(propVar);
-				mProps->m_comments = PropVar[4].pszVal;
-			}
-			else
-			{
-				propVar = new String (_T(""));
-				mProps->m_summaryInfo->append(propVar);
+			TSTR * dests[5] = { &mProps->m_title, &mProps->m_subject, &mProps->m_author, &mProps->m_keywords, &mProps->m_comments };
+			for( int i=0; i < 5; ++i ) {
+				TSTR str = tstrFromPropVar(PropVar[i]);
+				mProps->m_summaryInfo->append(new String(str));
+				*dests[i] = str;
 			}
 		}
 		
 		FreePropVariantArray(5, PropVar);
 		pSummaryInfoStorage->Release();
-
 	}
-	
-	
 
 	// Get the DocumentSummaryInfo property set interface
 	if (S_OK == pPropertySetStorage->Open(FMTID_DocSummaryInformation, STGM_READ|STGM_SHARE_EXCLUSIVE, &pDocumentSummaryInfoStorage)) 
@@ -508,49 +436,27 @@ Value* getmaxfileproperties_cf(Value** arg_list, int count)
 		PropSpec[4].ulKind = PRSPEC_PROPID;
 		PropSpec[4].propid = PID_DOCPARTS;
 		
-		Value* propVar;
 
 		HRESULT hr = pDocumentSummaryInfoStorage->ReadMultiple(5, PropSpec, PropVar);
 		if (S_OK == hr) 
 		{
-			if (PropVar[0].vt == VT_LPSTR) 
-			{
-				propVar = new String (PropVar[0].pszVal);
-				mProps->m_documentSummaryInfo->append(propVar);
-				mProps->m_manager = PropVar[0].pszVal;
-			}
-			else
-			{
-				propVar = new String (_T(""));
-				mProps->m_documentSummaryInfo->append(propVar);
-			}
-
-
-			if (PropVar[1].vt == VT_LPSTR) 			
-			{
-				propVar = new String (PropVar[1].pszVal);
-				mProps->m_documentSummaryInfo->append(propVar);
-				mProps->m_company = PropVar[1].pszVal;
-			}
-			else
-			{
-				propVar = new String (_T(""));
-				mProps->m_documentSummaryInfo->append(propVar);
+			for( int i=0; i<3; ++i ) {
+				TSTR str = tstrFromPropVar(PropVar[i]);
+				mProps->m_documentSummaryInfo->append(new String(str));
+				switch(i) {
+					case 0:
+						mProps->m_manager = str;
+						break;
+					case 1:
+						mProps->m_company = str;
+						break;
+					case 2:
+						mProps->m_category = str;
+						break;
+				}
 			}
 
-			if (PropVar[2].vt == VT_LPSTR) 			
-			{
-				propVar = new String (PropVar[2].pszVal);
-				mProps->m_documentSummaryInfo->append(propVar);
-				mProps->m_category = PropVar[2].pszVal;
-			}
-			else
-			{
-				propVar = new String (_T(""));
-				mProps->m_documentSummaryInfo->append(propVar);
-			}
-
-			if ((PropVar[3].vt == (VT_VARIANT | VT_VECTOR)) && (PropVar[4].vt == (VT_LPSTR | VT_VECTOR))) 
+			if ((PropVar[3].vt == (VT_VARIANT | VT_VECTOR)) && (PropVar[4].vt == (VT_LPSTR | VT_VECTOR)))
 			{
 				CAPROPVARIANT*	pHeading = &PropVar[3].capropvar;
 				CALPSTR*		pDocPart = &PropVar[4].calpstr;
@@ -567,78 +473,43 @@ Value* getmaxfileproperties_cf(Value** arg_list, int count)
 				// 14 - Render Data
 
 				int nDocPart = 0;
-				for (UINT i=0; i<pHeading->cElems; i+=2) 
+				for (UINT i=0; i<pHeading->cElems; i+=2)
 				{
-					for (int j=0; j<pHeading->pElems[i+1].lVal; j++) 
+					for (int j=0; j<pHeading->pElems[i+1].lVal; j++)
 					{
-						sprintf(szBuf, "%s", pDocPart->pElems[nDocPart]);
-						
-						switch ( i ) 
+						TSTR str = TSTR::FromACP(pDocPart->pElems[nDocPart]);
+						Value * propVar = new String(str);
+						switch ( i )
 						{
 							case 0: // m_general
-							{
-								propVar = new String (szBuf);
 								mProps->m_general->append(propVar);
-							}
-							break;
-
+								break;
 							case 2: // m_meshTotals
-							{
-								propVar = new String (szBuf);
 								mProps->m_meshTotals->append(propVar);
-							}
-							break;
-
+								break;
 							case 4: // m_sceneTotals
-							{
-								propVar = new String (szBuf);
 								mProps->m_sceneTotals->append(propVar);
-							}
-							break;
-
+								break;
 							case 6: // m_externalDependences
-							{
-								propVar = new String (szBuf);
 								mProps->m_externalDependences->append(propVar);
-							}
-							break; 
-							
+								break;
 							case 8: // m_objects
-							{
-								propVar = new String (szBuf);
 								mProps->m_objects->append(propVar);
-							}
-							break;
-
+								break;
 							case 10: // m_materials
-							{
-								propVar = new String (szBuf);
 								mProps->m_materials->append(propVar);
-							}
-							break;
-
+								break;
 							case 12: // m_usedPlugins
-							{
-								propVar = new String (szBuf);
 								mProps->m_usedPlugins->append(propVar);
-							}
-							break;
-
+								break;
 							case 14: // m_renderData
-							{
-								propVar = new String (szBuf);
 								mProps->m_renderData->append(propVar);
-							}
-							break;
-
+								break;
 						}
-
 						nDocPart++;
 					}
 				}
-
 			}
-
 		}
 		
 		mProps->m_documentSummaryInfo->append(mProps->m_general);
@@ -656,17 +527,16 @@ Value* getmaxfileproperties_cf(Value** arg_list, int count)
 
 	if (S_OK == pPropertySetStorage->Open(FMTID_UserDefinedProperties, STGM_READ|STGM_SHARE_EXCLUSIVE, &pUserDefinedPropertyStorage)) 
 	{
-		Value* propVar;
-		int		numUserProps = 0;
+		int numUserProps = 0;
 
 		// First we need to count the properties
 		IEnumSTATPROPSTG*	pIPropertyEnum;
-		if (S_OK == pUserDefinedPropertyStorage->Enum(&pIPropertyEnum)) 
+		if (S_OK == pUserDefinedPropertyStorage->Enum(&pIPropertyEnum))
 		{
 			STATPROPSTG property;
-			while (pIPropertyEnum->Next(1, &property, NULL) == S_OK) 
+			while (pIPropertyEnum->Next(1, &property, NULL) == S_OK)
 			{
-				if (property.lpwstrName) 
+				if (property.lpwstrName)
 				{
 					CoTaskMemFree(property.lpwstrName);
 					property.lpwstrName = NULL;
@@ -682,9 +552,9 @@ Value* getmaxfileproperties_cf(Value** arg_list, int count)
 
 			pIPropertyEnum->Reset();
 			int idx = 0;
-			while (pIPropertyEnum->Next(1, &property, NULL) == S_OK) 
+			while (pIPropertyEnum->Next(1, &property, NULL) == S_OK)
 			{
-				if (property.lpwstrName) 
+				if (property.lpwstrName)
 				{
 					pPropSpec[idx].ulKind = PRSPEC_LPWSTR;
 					pPropSpec[idx].lpwstr = (LPWSTR)CoTaskMemAlloc(sizeof(wchar_t)*(wcslen(property.lpwstrName)+1));
@@ -697,35 +567,19 @@ Value* getmaxfileproperties_cf(Value** arg_list, int count)
 			pIPropertyEnum->Release();
 
 			HRESULT hr = pUserDefinedPropertyStorage->ReadMultiple(idx, pPropSpec, pPropVar);
-			if (S_OK == hr) 
+			if (S_OK == hr)
 			{
-				
 				for (int i=0; i<idx; i++) 
 				{
 					Array* newProp = new Array(0);
-
-					wcstombs(szBuf, pPropSpec[i].lpwstr, 255);
-				
-					propVar = new String (szBuf);
-					newProp->append(propVar);
-
-					VariantToString(&pPropVar[i], szBuf, 255);
-					
-					propVar = new String (szBuf);
-					newProp->append(propVar);
-
-					TypeNameFromVariant(&pPropVar[i], szBuf, 255);
-					
-					propVar = new String (szBuf);
-					newProp->append(propVar);
-
+					newProp->append(new String(TSTR::FromUTF16(pPropSpec[i].lpwstr)));
+					newProp->append(new String(VariantToString(&pPropVar[i])));
+					newProp->append(new String(TypeNameFromVariant(&pPropVar[i])));
 					mProps->m_userDefinedProperties->append(newProp);
 				}
-
-				
 			}
 
-			for (int i=0; i<idx; i++) 
+			for (int i=0; i<idx; i++)
 			{
 				CoTaskMemFree(pPropSpec[i].lpwstr);
 			}
@@ -747,11 +601,11 @@ Value* getmaxfileproperties_cf(Value** arg_list, int count)
 
 void MaxFilePropertiesInit()
 {
-	#ifdef __MAXSCRIPT_2012__
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 	#include "maxscript\macros\define_implementations.h"
-	#else
+#else
 	#include "defimpfn.h"
-	#endif
+#endif
 		def_name ( summaryInfo )
 		def_name ( documentSummaryInfo )
 		def_name ( userDefinedProperties )

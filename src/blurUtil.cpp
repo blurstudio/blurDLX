@@ -43,35 +43,12 @@
 				POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include "imports.h"
 
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\maxscript.h"
-#include "maxscript\foundation\numbers.h"
-#include "maxscript\maxwrapper\maxclasses.h"
-#include "maxscript\foundation\streams.h"
-#include "maxscript\foundation\mxstime.h"
-#include "maxscript\maxwrapper\mxsobjects.h"
-#include "maxscript\compiler\parser.h"
-#include "maxscript\macros\local_class.h"
-#include "maxscript\maxwrapper\meshselection.h"
-#include "maxscript\foundation\3dmath.h"
-#include "maxscript\maxwrapper\mxsmaterial.h"
-#include "animtbl.h"
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 extern HINSTANCE hInstance;
-#else
-#include "MAXScrpt.h"
-#include "Numbers.h"
-#include "MAXclses.h"
-#include "Streams.h"
-#include "MSTime.h"
-#include "MAXObj.h"
-#include "Parser.h"
-#include "LclClass.h"
-//#include "meshdelta.h"	// exsits in 2012
-#include "MeshSub.h"
-#include "3dmath.h"
-#include "maxmats.h"
 #endif
+
 #include "meshdelta.h"	// exsits in 2012
 #include "resource.h"
 #include "OPC_TriTriOverlap.h"
@@ -83,14 +60,13 @@ extern HINSTANCE hInstance;
 #include "ilayermanager.h"
 #include "imtledit.h"
 
-
 #include <string>
 #include <iostream>
 #include <cctype>
 #include <algorithm>
 
 // define the new primitives using macros from SDK
-#ifdef __MAXSCRIPT_2012__
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
 #include "maxscript\macros\define_external_functions.h"
 #include "maxscript\macros\define_instantiation_functions.h"
 #else
@@ -115,54 +91,55 @@ extern HINSTANCE hInstance;
 // This macro is used to find the version of blurlib linked against at build time.
 #define VERSION_BLURDLXLIB ((BLURDLXLIB_API<<16)|(BLURDLXLIB_VER<<8)|BLURDLXLIB_REV)
 
-
-// following def also in common_funcs.cpp for use by ValueToBitArray()
-// following only valid for integer and float range checking
-#define range_check(_val, _lowerLimit, _upperLimit, _desc)					\
-	if (_val < _lowerLimit || _val > _upperLimit) {							\
-		TCHAR buf[256];														\
-		TCHAR buf2[128];													\
-		strcpy(buf,_desc);													\
-		strcat(buf,_T(" < "));												\
-		_snprintf(buf2, 128, _T("%g"), EPS(_lowerLimit));					\
-		strcat(buf,buf2);													\
-		strcat(buf,_T(" or > "));											\
-		_snprintf(buf2, 128, _T("%g"), EPS(_upperLimit));					\
-		strcat(buf,buf2);													\
-		strcat(buf,_T(": "));												\
-		_snprintf(buf2, 128, _T("%g"), EPS(_val));							\
-		strcat(buf,buf2);													\
-		throw RuntimeError (buf);											\
+void range_check( int val, int lower, int upper, TCHAR * desc )
+{
+	if( val < lower || val > upper ) {
+		TSTR error;
+		error.printf( _T("%s < %i or > %i: %i"), desc, lower, upper, val );
+		throw RuntimeError(error);
 	}
+}
 
 // valid values for parameter selTypesAllowed to ValueToBitArray, ValueToBitArrayM
 #define MESH_VERTSEL_ALLOWED 1
 #define MESH_FACESEL_ALLOWED 2
 #define MESH_EDGESEL_ALLOWED 3
 
-#define n_caption		Name::intern( "caption" )
-#define n_refresh		Name::intern( "refresh" )
+#define n_caption Name::intern( _T("caption") )
+#define n_refresh Name::intern( _T("refresh") )
 
 // uniqueId
-#define BLURDLX_CLASS_ID	0x000001
-#define	UNIQUE_ID_INDEX		0
+#define BLURDLX_CLASS_ID 0x000001
+#define UNIQUE_ID_INDEX 0
 
-namespace IdTypes { enum IdType { All, Atmos, Effect, Layer, Object, Material, Map }; };
+namespace IdTypes {
+	enum IdType {
+		All,
+		Atmos,
+		Effect,
+		Layer,
+		Object,
+		Material,
+		Map
+	};
+	
+};
 
 // getDuplicateVerts 
 #define EDITTRIOBJ_CLASSID GetEditTriObjDesc()->ClassID()
 #define TRIOBJ_CLASSID Class_ID(TRIOBJ_CLASS_ID, 0)
 
-#define get_valid_node(_node, _fn) _get_valid_node((MAXNode*)_node, #_fn##" requires a node")
-#define get_meshForValue(_value, _accessType, _owner, _fn) _get_meshForValue(_value, _accessType, _owner, #_fn##)
+#define get_valid_node(_node, _fn) _get_valid_node((MAXNode*)_node, (TCHAR*)((TSTR(fn) + _T(" requires a node")).data()))
+#define get_meshForValue(_value, _accessType, _owner, _fn) _get_meshForValue(_value, _accessType, _owner, _T(#_fn##))
 
 // ------------------------------------------------------------------------------------------------------
 //											C++ METHODS
 // ------------------------------------------------------------------------------------------------------
-INode*		_get_valid_node(MAXNode* _node, TCHAR* errmsg) {
+INode * _get_valid_node(MAXNode* _node, TCHAR* errmsg)
+{
 	if (is_node(_node)){	
 		if(deletion_check_test(_node))
-			throw RuntimeError("Attempted to access to deleted object");
+			throw RuntimeError(_T("Attempted to access to deleted object"));
 	}
 	else
 		throw RuntimeError (errmsg);
@@ -170,7 +147,8 @@ INode*		_get_valid_node(MAXNode* _node, TCHAR* errmsg) {
 	return _node->to_node();
 }
 
-Mesh*		_get_meshForValue(Value* value, int accessType, ReferenceTarget** owner, TCHAR* fn) {
+Mesh * _get_meshForValue(Value* value, int accessType, ReferenceTarget** owner, TCHAR* fn)
+{
 	/*!-----------------------------------------------------------
 		\remarks
 			if value is a node, do normal mesh access for node.
@@ -198,7 +176,9 @@ Mesh*		_get_meshForValue(Value* value, int accessType, ReferenceTarget** owner, 
 
 	return mesh;
 }
-COLORREF	DarkenColour(COLORREF col, double factor) {
+
+COLORREF DarkenColour(COLORREF col, double factor)
+{
 	/*!--------------------------------------------------------------------
 		\remarks
 			Lightens a colour by a factor between 0 and 1.
@@ -215,14 +195,18 @@ COLORREF	DarkenColour(COLORREF col, double factor) {
 	}
 	return col;
 }
-TCHAR*		GetString(int id) {
+
+TCHAR * GetString(int id)
+{
 	static TCHAR buf[256];
 
 	if(hInstance)
 		return LoadString(hInstance, id, buf, sizeof(buf)) ? buf : NULL;
 	return NULL;
 }
-COLORREF	LightenColour(COLORREF col, double factor) {
+
+COLORREF LightenColour(COLORREF col, double factor)
+{
 	/*!--------------------------------------------------------------------
 		\remarks
 			Lightens a colour by a factor between 0 and 1.
@@ -239,7 +223,9 @@ COLORREF	LightenColour(COLORREF col, double factor) {
 	}
 	return col;
 }
-void		ValueToBitArray(Value* inval, BitArray &theBitArray, int maxSize, TCHAR* errmsg = _T(""), int selTypesAllowed = 0) {
+
+void ValueToBitArray(Value* inval, BitArray &theBitArray, int maxSize, TCHAR* errmsg = _T(""), int selTypesAllowed = 0)
+{
 	if (inval->is_kind_of(class_tag(Array))) {
 		Array* theArray = (Array*)inval;
 		for (int k = 0; k < theArray->size; k++) {
@@ -294,13 +280,16 @@ void		ValueToBitArray(Value* inval, BitArray &theBitArray, int maxSize, TCHAR* e
 // ------------------------------------------------------------------------------------------------------
 //										UNIQUEID METHODS
 // ------------------------------------------------------------------------------------------------------
-ulong		GenUniqueId() {
+ulong GenUniqueId()
+{
 	mxs_seed( rand() );
 	ulong a = mxs_rand();
 	ulong b = ClassIDRandGenerator->rand();
 	return (a^b);
 }
-ulong		GetUniqueId( ReferenceTarget* targ ) {
+
+ulong GetUniqueId( ReferenceTarget* targ )
+{
 	AppDataChunk *ad		= targ->GetAppDataChunk(Class_ID(BLURDLX_CLASS_ID,0), CUST_ATTRIB_CLASS_ID, UNIQUE_ID_INDEX);
 
 	// If the unique id has not been set, then set it to a new unique id
@@ -317,7 +306,9 @@ ulong		GetUniqueId( ReferenceTarget* targ ) {
 		return (*((ulong*) ad->data));
 	}
 }
-INode*		NodeByUniqueId( INode* parent, ulong id ) {
+
+INode * NodeByUniqueId( INode* parent, ulong id )
+{
 	int objectCount = parent->NumberOfChildren();
 	for ( int i = 0; i < objectCount; i++ ) {
 		INode* cNode		= parent->GetChildNode(i);
@@ -334,7 +325,9 @@ INode*		NodeByUniqueId( INode* parent, ulong id ) {
 	}
 	return NULL;
 }
-INode*		NodeByUniqueName( INode* parent, TSTR uniqueName ) {
+
+INode * NodeByUniqueName( INode* parent, TSTR uniqueName )
+{
 	int objectCount = parent->NumberOfChildren();
 	for ( int i = 0; i < objectCount; i++ ) {
 		INode* cNode		= parent->GetChildNode(i);
@@ -350,7 +343,9 @@ INode*		NodeByUniqueName( INode* parent, TSTR uniqueName ) {
 	}
 	return NULL;
 }
-Value*		RefByUniqueId( int id, IdTypes::IdType type = IdTypes::All ) {
+
+Value * RefByUniqueId( int id, IdTypes::IdType type = IdTypes::All )
+{
 	Interface* ip	= GetCOREInterface();
 
 	if ( type == IdTypes::All || type == IdTypes::Atmos ) {
@@ -423,7 +418,9 @@ Value*		RefByUniqueId( int id, IdTypes::IdType type = IdTypes::All ) {
 	}
 	return &undefined;
 }
-Value*		RefByUniqueName( TSTR uniqueName, IdTypes::IdType type = IdTypes::All ) {
+
+Value * RefByUniqueName( TSTR uniqueName, IdTypes::IdType type = IdTypes::All )
+{
 	Interface* ip	= GetCOREInterface();
 
 	if ( type == IdTypes::All || type == IdTypes::Atmos ) {
@@ -501,7 +498,8 @@ def_struct_primitive( showWindow,			blurUtil,		"showWindow" );
 
 // -----------------------------------------------------------------------------------------------------
 // Misc Methods
-Value*		getDuplicateVerts_cf( Value** arg_list, int arg_count ) {
+Value * getDuplicateVerts_cf( Value** arg_list, int arg_count )
+{
 	/*!---------------------------------------------------------
 		\remarks
 			Gets the duplicate vertices of a mesh based on a float tolerance
@@ -534,7 +532,9 @@ Value*		getDuplicateVerts_cf( Value** arg_list, int arg_count ) {
 
 	return (new BitArrayValue (dupVerts));
 }
-Value*		getReferenceTarget_cf( Value** arg_list, int count ) {
+
+Value * getReferenceTarget_cf( Value** arg_list, int count )
+{
 	check_arg_count (getReferenceTarget, 1, count);
 
 	ReferenceMaker* target = arg_list[0]->to_reftarg();
@@ -555,7 +555,9 @@ Value*		getReferenceTarget_cf( Value** arg_list, int count ) {
 
 	return item;
 }
-Value*		intersectTriTri_cf( Value** arg_list, int count ) {
+
+Value * intersectTriTri_cf( Value** arg_list, int count )
+{
 	check_arg_count (blurUtil.intersectTriTri, 6, count);
 	
 	Point3 V0 = arg_list[0]->to_point3();
@@ -569,11 +571,15 @@ Value*		intersectTriTri_cf( Value** arg_list, int count ) {
 
 	return intersect ? &true_value: &false_value;
 }
-Value*		searchAndReplace_cf(Value** arg_list, int count) {
+
+Value * searchAndReplace_cf(Value** arg_list, int count)
+{
 	extern Value* replace_cf( Value** arg_list, int count );
 	return replace_cf( arg_list, count );						// moved into blurString library - see blurString.cpp - EKH 9/18/07
 }
-Value*		setMaterials_cf( Value** arg_list, int count ) {
+
+Value * setMaterials_cf( Value** arg_list, int count )
+{
 	check_arg_count_with_keys (SetNames, 2, count);
 
 	Value* nodes = arg_list[0]->eval();
@@ -613,7 +619,9 @@ Value*		setMaterials_cf( Value** arg_list, int count ) {
 
 	return Integer::intern(success);
 }
-Value*		setNames_cf( Value** arg_list, int count ) {
+
+Value * setNames_cf( Value** arg_list, int count )
+{
 	check_arg_count_with_keys (SetNames, 2, count);
 
 	if (!arg_list[0]->is_kind_of(class_tag(Array)))
@@ -635,15 +643,16 @@ Value*		setNames_cf( Value** arg_list, int count ) {
 			continue;
 
 		INode* node = nodeArray->data[j]->to_node();
-		TCHAR* newName = nameArray->data[j]->to_string();
-        
-		node->SetName(newName);		
+		const TCHAR* newName = nameArray->data[j]->to_string();
+
+		node->SetName(newName);
 	}
 
 	return nodeArray;
 }
 
-Value*		controlSize_cf( Value** arg_list, int count ) {
+Value * controlSize_cf( Value** arg_list, int count )
+{
 	check_arg_count( controlSize, 1, count );
 
 	if ( !is_rolloutcontrol(arg_list[0]->eval()) )
@@ -666,7 +675,9 @@ Value*		controlSize_cf( Value** arg_list, int count ) {
 	vl.out = new Point2Value( point );
 	return_value( vl.out );
 }
-Value*		setSubRolloutSize_cf( Value** arg_list, int count ) {
+
+Value * setSubRolloutSize_cf( Value** arg_list, int count )
+{
 	check_arg_count( blurUtil.setRolloutSize, 2, count );
 	if ( !is_rollout( arg_list[0]->eval() ) )
 		throw RuntimeError( _T( "First argument of blurUtil.setRolloutSize needs to be a rollout control." ) );
@@ -715,7 +726,9 @@ Value*		setSubRolloutSize_cf( Value** arg_list, int count ) {
 	}
 	return &false_value;
 }
-Value*		setControlSize_cf( Value** arg_list, int count ) {
+
+Value * setControlSize_cf( Value** arg_list, int count )
+{
 	check_arg_count_with_keys( setControlSize, 2, count );
 
 	if ( is_rollout( arg_list[0]->eval() ) )
@@ -746,11 +759,14 @@ Value*		setControlSize_cf( Value** arg_list, int count ) {
 }
 
 // Unique Id Methods
-Value*		genUniqueId_cf( Value** arg_list, int count ) {
+Value * genUniqueId_cf( Value** arg_list, int count )
+{
 	check_arg_count( blurUtil.genUniqueId, 0, count );
 	return Integer::intern( GenUniqueId() );
 }
-Value*		refByUniqueId_cf( Value** arg_list, int count ) {
+
+Value * refByUniqueId_cf( Value** arg_list, int count )
+{
 	check_arg_count_with_keys( blurUtil.refByUniqueId, 1, count );
 	Value* typeValue = key_arg( type );
 
@@ -763,13 +779,15 @@ Value*		refByUniqueId_cf( Value** arg_list, int count ) {
 	else if ( typeValue == Name::intern( _T( "material" ) ) )	type = IdTypes::Material;
 	else if ( typeValue == Name::intern( _T( "map" ) ) )		type = IdTypes::Map;
 
-	int id			= arg_list[0]->eval()->to_int();
+	int id = arg_list[0]->eval()->to_int();
 	if ( id == 0 )
 		return &undefined;
 
 	return RefByUniqueId( id, type );
 }
-Value*		refByUniqueName_cf( Value** arg_list, int count ) {
+
+Value * refByUniqueName_cf( Value** arg_list, int count )
+{
 	check_arg_count_with_keys( blurUtil.refByUniqueName, 1, count );
 	Value* typeValue = key_arg( type );
 
@@ -787,7 +805,9 @@ Value*		refByUniqueName_cf( Value** arg_list, int count ) {
 	
 	return RefByUniqueName( uniqueName, type );
 }
-Value*		uniqueId_cf( Value** arg_list, int count ) {
+
+Value * uniqueId_cf( Value** arg_list, int count )
+{
 	check_arg_count_with_keys( blurUtil.unqiueId, 1, count );
 	ReferenceTarget* targ;
 
@@ -805,8 +825,10 @@ Value*		uniqueId_cf( Value** arg_list, int count ) {
 
 	return Integer::intern( GetUniqueId( targ ) );
 }
+
 // Windows Methods
-Value*		getWindowText_cf( Value** arg_list, int count ) {
+Value * getWindowText_cf( Value** arg_list, int count )
+{
 	check_arg_count (getWindowText, 1, count);
 
 	HWND hWnd = (HWND)arg_list[0]->to_intptr();
@@ -819,7 +841,9 @@ Value*		getWindowText_cf( Value** arg_list, int count ) {
 
 	return new String(windowText);
 }
-Value*		maximizeWindow_cf( Value** arg_list, int count ) {
+
+Value * maximizeWindow_cf( Value** arg_list, int count )
+{
 	check_arg_count (maximizeWindow, 1, count);
 
 	HWND windowHandle = (HWND)arg_list[0]->to_intptr();
@@ -827,7 +851,9 @@ Value*		maximizeWindow_cf( Value** arg_list, int count ) {
 	
 	return result ? &true_value : &false_value;
 }
-Value*		minimizeWindow_cf( Value** arg_list, int count ) {
+
+Value * minimizeWindow_cf( Value** arg_list, int count )
+{
 	check_arg_count (minimizeWindow, 1, count);
 
 	HWND windowHandle = (HWND)arg_list[0]->to_intptr();
@@ -835,7 +861,9 @@ Value*		minimizeWindow_cf( Value** arg_list, int count ) {
 	
 	return result ? &true_value : &false_value;
 }
-Value*		restoreWindow_cf( Value** arg_list, int count ) {
+
+Value * restoreWindow_cf( Value** arg_list, int count )
+{
 	check_arg_count (restoreWindow, 1, count);
 
 	HWND windowHandle = (HWND)arg_list[0]->to_intptr();
@@ -843,20 +871,22 @@ Value*		restoreWindow_cf( Value** arg_list, int count ) {
 	
 	return result ? &true_value : &false_value;
 }
-Value*		setClipboardData_cf(Value** arg_list, int count) {
+
+Value * setClipboardData_cf(Value** arg_list, int count)
+{
 	check_arg_count (setClipboardData, 1, count);	
 	
-	TCHAR *str = arg_list[0]->to_string();
+	const TCHAR *str = arg_list[0]->to_string();
 
 	HGLOBAL h;
-	LPSTR p;
+	LPTSTR p;
 
     if (!OpenClipboard( GetCOREInterface()->GetMAXHWnd())) 
         return &false_value; 
 
 	__try
 	{
-		h = GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, (lstrlen(str) +1) * sizeof(TCHAR) );
+		h = GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, (_tcslen(str) +1) * sizeof(TCHAR) );
 		
 		if ( h == NULL )
 			return &false_value;
@@ -868,7 +898,7 @@ Value*		setClipboardData_cf(Value** arg_list, int count) {
 			return &false_value;
 		}
 
-		lstrcpy(p, str);
+		_tcscpy(p, str);
 		GlobalUnlock(h);
 		EmptyClipboard();
 		SetClipboardData( CF_TEXT, h);
@@ -880,7 +910,9 @@ Value*		setClipboardData_cf(Value** arg_list, int count) {
 
 	return &true_value;
 }
-Value*		setWindowOnTop_cf( Value** arg_list, int count ) {
+
+Value * setWindowOnTop_cf( Value** arg_list, int count )
+{
 	check_arg_count (setWindowOnTop, 2, count);
 	HWND windowHandle = (HWND)arg_list[0]->to_intptr();
 	BOOL putItOnTop = arg_list[1]->to_bool();
@@ -894,7 +926,9 @@ Value*		setWindowOnTop_cf( Value** arg_list, int count ) {
 
 	return result ? &true_value : &false_value;
 }
-Value*		setWindowText_cf( Value** arg_list, int count ) {
+
+Value * setWindowText_cf( Value** arg_list, int count )
+{
 	check_arg_count (setWindowText, 2, count);
 
 	HWND windowHandle = (HWND)arg_list[0]->to_intptr();
@@ -904,11 +938,13 @@ Value*		setWindowText_cf( Value** arg_list, int count ) {
 	
 	return &true_value;
 }
-Value*		showWindow_cf( Value** arg_list, int count ) {
+
+Value * showWindow_cf( Value** arg_list, int count )
+{
 	check_arg_count (showWindow, 1, count);
 
 	HWND windowHandle = (HWND)arg_list[0]->to_intptr();
-	BOOL result = ShowWindow(windowHandle, SW_SHOW); 
+	BOOL result = ShowWindow(windowHandle, SW_SHOW);
 	
 	return result ? &true_value : &false_value;
 }
@@ -918,7 +954,7 @@ Value*		showWindow_cf( Value** arg_list, int count ) {
 // ------------------------------------------------------------------------------------------------------
 
 // establish a new system global variable, first are the getter & stter fns
-Value*		get_blurdlx_version() {
+Value * get_blurdlx_version() {
 	one_typed_value_local(Array* result); 
 	vl.result = new Array(4);
 	vl.result->append(Integer::intern(MAX_RELEASE));
@@ -927,6 +963,7 @@ Value*		get_blurdlx_version() {
 	vl.result->append(Integer::intern(BLURDLXLIB_REV));
 	return_value(vl.result);
 }
+
 Value*		get_blurdlx_loaded()				{ return &true_value; }
 Value*		set_blurdlx_version(Value* val)		{ return get_blurdlx_version(); }
 Value*		set_blurdlx_loaded(Value* val)		{ return get_blurdlx_loaded(); }
@@ -935,8 +972,8 @@ Value*		set_blurdlx_loaded(Value* val)		{ return get_blurdlx_loaded(); }
 //										BLURUTIL INIT
 // ------------------------------------------------------------------------------------------------------
 void BlurUtilInit() {
-	define_system_global("BlurDlxLibVer", get_blurdlx_version, set_blurdlx_version);
-	define_system_global("BlurDlxLibLoaded", get_blurdlx_loaded, set_blurdlx_loaded);
+	define_system_global(_T("BlurDlxLibVer"), get_blurdlx_version, set_blurdlx_version);
+	define_system_global(_T("BlurDlxLibLoaded"), get_blurdlx_loaded, set_blurdlx_loaded);
 
 	CharStream* out = thread_local(current_stdout);
 	out->puts(_T("--* BlurDlx.dlx loaded *--\n"));

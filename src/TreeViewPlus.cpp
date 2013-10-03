@@ -1,26 +1,6 @@
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\maxscript.h"
-#include "maxscript\maxwrapper\mxsobjects.h"
-#include "maxscript\foundation\numbers.h"
-#include "maxscript\foundation\colors.h"
-#include "maxscript\foundation\structs.h"
-#include "maxscript\compiler\parser.h"
 
-#include "maxscript\UI\rollouts.h"
+#include "imports.h"
 
-#include "maxscript\maxwrapper\mxsmaterial.h"
-#else
-#include "MAXScrpt.h"
-#include "MAXObj.h"
-#include "Numbers.h"
-#include "ColorVal.h"
-#include "Structs.h"
-#include "Parser.h"
-
-#include "rollouts.h"
-
-#include "MAXMats.h"
-#endif
 #include "MaxIcon.h"
 
 extern HINSTANCE		g_hInst;
@@ -29,11 +9,6 @@ extern COLORREF			LightenColour(COLORREF col, double factor);
 extern INode*			_get_valid_node(MAXNode* _node, TCHAR* errmsg);
 
 #include "resource.h"
-
-#ifdef ScripterExport
-	#undef ScripterExport
-#endif
-#define ScripterExport __declspec( dllexport )
 
 #include "GenericMethod.h"
 #include "TreeViewPlus.h"
@@ -48,9 +23,9 @@ extern INode*			_get_valid_node(MAXNode* _node, TCHAR* errmsg);
 
 static WNDPROC		lpfnWndProc = NULL;			// original wndproc for the tree view
 
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\macros\define_external_functions.h"
-#include "maxscript\macros\define_instantiation_functions.h"
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
+#include "macros/define_external_functions.h"
+#include "macros/define_instantiation_functions.h"
 #else
 // external name definitions
 #include "defextfn.h"
@@ -448,8 +423,8 @@ long				TreeViewPlus::handleEndEditLabel( HWND hWndTreeView, LPNMTVCUSTOMDRAW pN
 	TreeViewItemPlus* item = (TreeViewItemPlus*) this->_itemEditing;
 	long result = 0;
 	if ( this->_itemEditing != &undefined ) {
-		char itemText[256] = "";
-		GetWindowText( this->_editWindow, itemText, sizeof( itemText ) );
+		TCHAR itemText[256];
+		GetWindowText( this->_editWindow, itemText, sizeof( itemText ) / sizeof(TCHAR) );
 
 		Value* isChanged	= &true_value;
 
@@ -861,7 +836,7 @@ void				TreeViewPlus::gc_trace() {
 void				TreeViewPlus::add_control( Rollout* ro, HWND parent, HINSTANCE hInstance, int& current_y ) {
 	this->caption			= this->caption->eval();
 
-	TCHAR* text				= this->caption->eval()->to_string();
+	const TCHAR* text		= this->caption->eval()->to_string();
 	this->control_ID		= this->next_id();
 	this->parent_rollout	= ro;
 
@@ -1072,7 +1047,7 @@ Value*				TreeViewPlus::set_property( Value** arg_list, int count ) {
 	else if ( prop == n_hwnd )						{ throw RuntimeError( _T( "You cannot change the hwnd property." ) ); }
 	else if ( prop == n_height )					{ this->setHeight( val->to_int() ); }
 	else if ( prop == n_imageList )					{
-		TCHAR* iconFileName = val->to_string();
+		const TCHAR * iconFileName = val->to_string();
 		LoadMAXFileIcon( iconFileName, this->_images, kBackground, FALSE );
 		TreeView_SetImageList( this->window(), this->_images, TVSIL_NORMAL );
 	}
@@ -1168,7 +1143,7 @@ Value*				TreeViewItemPlus::addItem( Value* item, BOOL recursive ) {
 	if ( item->is_kind_of( class_tag( String ) ) ) {
 		TreeViewItemPlus* child	= new TreeViewItemPlus( this->control() );
 		child->setNode( item );
-		child->setName( _T( item->to_string() ) );
+		child->setName( item->to_string() );
 		if ( this->addChild( child ) )
 			return child;
 	}
@@ -1204,8 +1179,8 @@ Value*				TreeViewItemPlus::addItem( Value* item, BOOL recursive ) {
 
 	// Add TreeViewItemPlus
 	else if ( item->is_kind_of( class_tag(TreeViewItemPlus) ) ) {
-		TreeViewItemPlus* child	= new TreeViewItemPlus( this->control(), (TreeViewItemPlus*) item );
-		if ( this->addChild( child ) )
+		TreeViewItemPlus* child	= new TreeViewItemPlus( control(), (TreeViewItemPlus*) item );
+		if ( addChild( child ) )
 			return child;
 		return &undefined;
 	}
@@ -1213,10 +1188,10 @@ Value*				TreeViewItemPlus::addItem( Value* item, BOOL recursive ) {
 	// Add MAXTexture
 	else if ( item->is_kind_of( class_tag( MAXTexture ) ) || item->is_kind_of( class_tag( MAXMultiMaterial ) ) ) {
 		MtlBase* mtl				= (MtlBase*) item->to_texmap();
-		TreeViewItemPlus* child		= new TreeViewItemPlus( this->control() );
+		TreeViewItemPlus* child		= new TreeViewItemPlus( control() );
 		child->setNode( item );
-		child->setName( _T( mtl->GetName() ) );
-		if ( this->addChild( child ) )
+		child->setName( mtl->GetName() );
+		if ( addChild( child ) )
 			return child;
 		return &undefined;
 	}
@@ -1224,11 +1199,11 @@ Value*				TreeViewItemPlus::addItem( Value* item, BOOL recursive ) {
 	// Add MAXMaterial || MAXMultiMaterial
 	else if ( item->is_kind_of( class_tag( MAXMaterial ) ) || item->is_kind_of( class_tag( MAXMultiMaterial ) ) ) {
 		Mtl* mtl					= (Mtl*) item->to_mtl();
-		TreeViewItemPlus* child		= new TreeViewItemPlus( this->control() );
+		TreeViewItemPlus* child		= new TreeViewItemPlus( control() );
 		child->setNode( item );
-		child->setName( _T( mtl->GetName() ) );
+		child->setName( mtl->GetName() );
 		child->setColor( mtl->GetDiffuse(0).toRGB() );
-		if ( this->addChild( child ) )
+		if ( addChild( child ) )
 			return child;
 		return &undefined;
 	}
@@ -1239,7 +1214,7 @@ Value*				TreeViewItemPlus::addItem( Value* item, BOOL recursive ) {
 		vl.out				= new Array(0);
 		Array* itemList		= (Array*) item;
 		for ( int i = 0; i < itemList->size; i++ ) {
-			Value* result = this->addItem( itemList->data[i] );
+			Value* result = addItem( itemList->data[i] );
 			if ( result != &undefined )
 				vl.out->append( result );
 		}
@@ -1248,16 +1223,19 @@ Value*				TreeViewItemPlus::addItem( Value* item, BOOL recursive ) {
 
 	return &undefined;
 }
-void				TreeViewItemPlus::addToTree( HTREEITEM parent ) {
+
+void TreeViewItemPlus::addToTree( HTREEITEM parent )
+{
 	TVINSERTSTRUCT insert;
 	TVITEM item;
 	item.mask			= TVIF_HANDLE | TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_PARAM | TVIF_STATE;
-	item.pszText		= LPSTR( this->name() );
-	item.cchTextMax		= lstrlen( this->name() );
-	item.iImage			= this->iconImage();
-	item.iSelectedImage	= this->iconSelectedImage();
+	TSTR _name = name();
+	item.pszText		= (TCHAR*)(_name.data());
+	item.cchTextMax		= _name.Length();
+	item.iImage			= iconImage();
+	item.iSelectedImage	= iconSelectedImage();
 	item.lParam			= (LPARAM) this;
-	item.state			= this->isSelected() ? TVIS_SELECTED : 0;
+	item.state			= isSelected() ? TVIS_SELECTED : 0;
 
 	insert.item			= item;
 	insert.hInsertAfter	= TVI_LAST;
@@ -1269,78 +1247,98 @@ void				TreeViewItemPlus::addToTree( HTREEITEM parent ) {
 		insert.hParent	= TVI_ROOT;
 
 	// Add the item to the tree-view control
-	HTREEITEM hNewItem	= (HTREEITEM) SendMessage( this->control()->window(), TVM_INSERTITEM, 0, (LPARAM) (LPTVINSERTSTRUCT) &insert );
+	HTREEITEM hNewItem	= (HTREEITEM) SendMessage( control()->window(), TVM_INSERTITEM, 0, (LPARAM) (LPTVINSERTSTRUCT) &insert );
 
 	item.mask			= TVIF_PARAM;
 	item.hItem			= hNewItem;
 
-	TreeView_GetItem( this->control()->window(), &item );
+	TreeView_GetItem( control()->window(), &item );
 
 	if ( item.lParam ) {
-		TreeViewItemPlus* tvItem	= (TreeViewItemPlus*) item.lParam;
-		tvItem->_treeItem			= hNewItem;
+		TreeViewItemPlus* tvItem = (TreeViewItemPlus*) item.lParam;
+		tvItem->_treeItem = hNewItem;
 		tvItem->setName( tvItem->name() );
-		TreeView_SetItem( this->control()->window(), &item ); 
+		TreeView_SetItem( control()->window(), &item ); 
 	}
 
-	for (int i = 0; i < this->_children->size; i++ )
-		((TreeViewItemPlus*) this->_children->data[i])->addToTree( this->treeItem() );
+	for (int i = 0; i < _children->size; i++ )
+		((TreeViewItemPlus*) _children->data[i])->addToTree( treeItem() );
 }
-Array*				TreeViewItemPlus::children( BOOL recursive ) {
+
+Array * TreeViewItemPlus::children( BOOL recursive )
+{
 	if ( recursive ) {
 		init_thread_locals();
 		push_alloc_frame();
 		one_typed_value_local( Array* out );
 		vl.out = new Array(0);
-		for ( int i = 0; i < this->_children->size; i++ ) {
-			vl.out->append( this->_children->data[i] );
-			vl.out->join( ((TreeViewItemPlus*) this->_children->data[i])->children(TRUE) );
+		for ( int i = 0; i < _children->size; i++ ) {
+			vl.out->append( _children->data[i] );
+			vl.out->join( ((TreeViewItemPlus*) _children->data[i])->children(TRUE) );
 		}
 		pop_alloc_frame();
 		return_value( vl.out );
 	}
-	return this->_children;
+	return _children;
 }
-COLORREF			TreeViewItemPlus::color()				{ return this->_color; }
-TreeViewPlus*		TreeViewItemPlus::control()				{ return this->_control; }
-Value*				TreeViewItemPlus::data()				{ return this->_data; }
-void				TreeViewItemPlus::deleteChildren()		{
-	for ( int i = this->_children->size - 1; i >= 0; i-- )
-		((TreeViewItemPlus*) this->_children->data[i])->remove( FALSE );
+
+COLORREF TreeViewItemPlus::color() { return _color; }
+
+TreeViewPlus * TreeViewItemPlus::control() { return _control; }
+
+Value * TreeViewItemPlus::data() { return _data; }
+
+void TreeViewItemPlus::deleteChildren()
+{
+	for ( int i = _children->size - 1; i >= 0; i-- )
+		((TreeViewItemPlus*) _children->data[i])->remove( FALSE );
 }
-void				TreeViewItemPlus::deselectAll( BOOL recursive )		{
-	Array* childList = this->children( recursive );
+
+void TreeViewItemPlus::deselectAll( BOOL recursive )
+{
+	Array* childList = children( recursive );
 	for ( int i = 0; i < childList->size; i++ )
 		((TreeViewItemPlus*)childList->data[i])->setSelected( FALSE );
 }
-void				TreeViewItemPlus::editLabel() {
-	if ( this->isInitialized() ) {
-		this->ensureVisible();
-		this->setSelected( TRUE );
-		TreeView_EditLabel( this->control()->window(), this->treeItem() );
+
+void TreeViewItemPlus::editLabel()
+{
+	if ( isInitialized() ) {
+		ensureVisible();
+		setSelected( TRUE );
+		TreeView_EditLabel( control()->window(), treeItem() );
 	}
 }
-void				TreeViewItemPlus::endEditLabel() {
-	if ( this->isInitialized() )
-		TreeView_EndEditLabelNow( this->control()->window(), TRUE );
+
+void TreeViewItemPlus::endEditLabel()
+{
+	if ( isInitialized() )
+		TreeView_EndEditLabelNow( control()->window(), TRUE );
 }
-BOOL				TreeViewItemPlus::ensureVisible() {
-	return (TreeView_EnsureVisible( this->control()->window(), this->treeItem() ));
+
+BOOL TreeViewItemPlus::ensureVisible()
+{
+	return (TreeView_EnsureVisible( control()->window(), treeItem() ));
 }
-Value*				TreeViewItemPlus::extraData()			{ return this->_extraData; }
-Value*				TreeViewItemPlus::gt_vf( Value** arg_list, int count ) {
+
+Value * TreeViewItemPlus::extraData() { return _extraData; }
+
+Value * TreeViewItemPlus::gt_vf( Value** arg_list, int count )
+{
 	check_arg_count( __gt__, 1, count );
-	return (CompareItems( (LPARAM) this, (LPARAM) arg_list[0], (LPARAM) this->control() ) == 1 ) ? &true_value : &false_value;
+	return (CompareItems( (LPARAM)this, (LPARAM) arg_list[0], (LPARAM)control() ) == 1 ) ? &true_value : &false_value;
 }
-BOOL				TreeViewItemPlus::hasChild( TreeViewItemPlus* item, BOOL recursive ) {
+
+BOOL TreeViewItemPlus::hasChild( TreeViewItemPlus* item, BOOL recursive )
+{
 	BOOL success = FALSE;
-	for (int i = 0; i < this->_children->size; i++ ) {
-		if ( this->_children->data[i] == item ) {
+	for (int i = 0; i < _children->size; i++ ) {
+		if ( _children->data[i] == item ) {
 			success = TRUE;
 			break;
 		}
 		if ( recursive ) {
-			if ( ((TreeViewItemPlus*) this->_children->data[i])->hasChild( item, TRUE ) ) {
+			if ( ((TreeViewItemPlus*) _children->data[i])->hasChild( item, TRUE ) ) {
 				success = TRUE;
 				break;
 			}
@@ -1348,28 +1346,42 @@ BOOL				TreeViewItemPlus::hasChild( TreeViewItemPlus* item, BOOL recursive ) {
 	}
 	return success;
 }
-int					TreeViewItemPlus::iconImage()			{ return this->_iconImage; }
-int					TreeViewItemPlus::iconSelectedImage()	{ return (this->_iconSelectedImage == -1) ? this->_iconImage : this->_iconSelectedImage; }
-int					TreeViewItemPlus::iconState()			{ return this->_iconState; }
-BOOL				TreeViewItemPlus::isCollapsed()		{
+
+int TreeViewItemPlus::iconImage() { return _iconImage; }
+
+int TreeViewItemPlus::iconSelectedImage()
+{ return (_iconSelectedImage == -1) ? _iconImage : _iconSelectedImage; }
+
+int TreeViewItemPlus::iconState() { return _iconState; }
+
+BOOL TreeViewItemPlus::isCollapsed()
+{
 	// Collapsed if this item is collapsed or any ancestors are collapsed
 	BOOL amCollapsed = FALSE;
-	if ( !this->isRoot() ) {
-		amCollapsed = (TreeView_GetItemState( this->control()->window(), this->treeItem(), TVIS_EXPANDED ) & TVIS_EXPANDED) ? FALSE : TRUE;
-		if ( !amCollapsed && this->parent() )
-			amCollapsed = this->parent()->isCollapsed();
+	if ( !isRoot() ) {
+		amCollapsed = (TreeView_GetItemState( control()->window(), treeItem(), TVIS_EXPANDED ) & TVIS_EXPANDED) ? FALSE : TRUE;
+		if ( !amCollapsed && parent() )
+			amCollapsed = parent()->isCollapsed();
 	}
 	return amCollapsed;
 }
-BOOL				TreeViewItemPlus::isEnabled()			{ 
-	return ( this->_amEnabled && this->parent() ) ? this->parent()->isEnabled() : this->_amEnabled; 
+
+BOOL TreeViewItemPlus::isEnabled()
+{
+	return ( _amEnabled && parent() ) ? parent()->isEnabled() : _amEnabled;
 }
-BOOL				TreeViewItemPlus::isInitialized()		{ return (this->_treeItem != NULL); }
-BOOL				TreeViewItemPlus::isRoot()				{ return ( this->control()->root() == this ); }
-BOOL				TreeViewItemPlus::isSelected()			{ return this->_amSelected; }
-BOOL				TreeViewItemPlus::isVisible()			{ return (this->parent()) ? !this->parent()->isCollapsed() : TRUE; }
-Value*				TreeViewItemPlus::itemByData( Value* data, BOOL recursive ) {
-	Array* childList = this->children(recursive);
+
+BOOL TreeViewItemPlus::isInitialized() { return _treeItem != NULL; }
+
+BOOL TreeViewItemPlus::isRoot() { return control()->root() == this; }
+
+BOOL TreeViewItemPlus::isSelected() { return _amSelected; }
+
+BOOL TreeViewItemPlus::isVisible() { return parent() ? !parent()->isCollapsed() : TRUE; }
+
+Value * TreeViewItemPlus::itemByData( Value* data, BOOL recursive )
+{
+	Array* childList = children(recursive);
 	Value* out = &undefined;
 	for (int i = 0; i < childList->size; i++ ) {
 		if ( ((TreeViewItemPlus*) childList->data[i] )->data() == data ) {
@@ -1379,177 +1391,218 @@ Value*				TreeViewItemPlus::itemByData( Value* data, BOOL recursive ) {
 	}
 	return out;
 }
-Array*				TreeViewItemPlus::itemsByNode( Value* node, BOOL recursive ) {
+
+Array * TreeViewItemPlus::itemsByNode( Value* node, BOOL recursive )
+{
 	one_typed_value_local( Array* out );
 	vl.out = new Array(0);
 
-	for (int i = 0; i < this->_children->size; i++ ) {
-		if ( this->_children->data[i] == node )
-			vl.out->append( this->_children->data[i] );
+	for (int i = 0; i < _children->size; i++ ) {
+		if ( _children->data[i] == node )
+			vl.out->append( _children->data[i] );
 	}
 	return_value( vl.out );
 }
-Value*				TreeViewItemPlus::lt_vf( Value** arg_list, int count ) {
+
+Value * TreeViewItemPlus::lt_vf( Value** arg_list, int count )
+{
 	check_arg_count( __lt__, 1, count );
-	return (CompareItems( (LPARAM) this, (LPARAM) arg_list[0], (LPARAM) this->control() ) == -1) ? &true_value : &false_value;
+	return (CompareItems( (LPARAM)this, (LPARAM)arg_list[0], (LPARAM)control() ) == -1) ? &true_value : &false_value;
 }
-TSTR				TreeViewItemPlus::name()				{ return this->_name; }
-Value*				TreeViewItemPlus::node()				{ return this->_node; }
-TreeViewItemPlus*	TreeViewItemPlus::parent()				{ return this->_parent; }
-BOOL				TreeViewItemPlus::remove( BOOL repaintUi ) {
+
+TSTR TreeViewItemPlus::name() { return _name; }
+
+Value * TreeViewItemPlus::node() { return _node; }
+
+TreeViewItemPlus * TreeViewItemPlus::parent() { return _parent; }
+
+BOOL TreeViewItemPlus::remove( BOOL repaintUi )
+{
 	// Remove from the Ui
-	if ( this->_treeItem ) {
-		TreeView_DeleteItem( this->control()->window(), this->_treeItem );
-		this->_treeItem = NULL;
+	if ( _treeItem ) {
+		TreeView_DeleteItem( control()->window(), _treeItem );
+		_treeItem = NULL;
 		if ( repaintUi )
-			this->control()->repaint();
+			control()->repaint();
 	}
 	// Remove from the data hierarchy
-	if ( this->_parent ) {
-		Array* oldChildren	= this->_parent->_children;
+	if ( _parent ) {
+		Array* oldChildren	= _parent->_children;
 		Array* newChildren	= new Array(0);
 		for (int i = 0; i < oldChildren->size; i++ ) {
 			if ( oldChildren->data[i] != this )
 				newChildren->append( oldChildren->data[i] );
 		}
-		this->_parent->_children	= newChildren;
+		_parent->_children	= newChildren;
 	}
 	return TRUE;
 }
-TreeViewItemPlus*	TreeViewItemPlus::root()				{ return this->control()->root(); }
-BOOL				TreeViewItemPlus::setCollapsed( BOOL state ) {
+
+TreeViewItemPlus * TreeViewItemPlus::root() { return control()->root(); }
+
+BOOL TreeViewItemPlus::setCollapsed( BOOL state )
+{
 	BOOL success = FALSE;
 	if ( state ) {
-		success = TreeView_Expand( this->control()->window(), this->treeItem(), TVE_COLLAPSE );
+		success = TreeView_Expand( control()->window(), treeItem(), TVE_COLLAPSE );
 	}
 	else {
-		success = TreeView_Expand( this->control()->window(), this->treeItem(), TVE_EXPAND );
+		success = TreeView_Expand( control()->window(), treeItem(), TVE_EXPAND );
 	}
 	return success;
 }
-BOOL				TreeViewItemPlus::setColor( COLORREF clr ) {
-	this->_color = clr;
-	if ( this->isInitialized() )
-		this->control()->repaint();
+
+BOOL TreeViewItemPlus::setColor( COLORREF clr )
+{
+	_color = clr;
+	if ( isInitialized() )
+		control()->repaint();
 	return TRUE;
 }
-BOOL				TreeViewItemPlus::setControl( TreeViewPlus* ctrl ) { 
+
+BOOL TreeViewItemPlus::setControl( TreeViewPlus* ctrl )
+{
 	BOOL success = FALSE;
-	if ( !this->_control ) {
-		this->_control = ctrl; 
+	if ( !_control ) {
+		_control = ctrl;
 		success = TRUE;
 	}
 	return success;
 }
-BOOL				TreeViewItemPlus::setData( Value* dataValue )	{ 
-	this->_data	= dataValue; 
+
+BOOL TreeViewItemPlus::setData( Value* dataValue )
+{
+	_data	= dataValue;
 	return TRUE;
 }
-BOOL				TreeViewItemPlus::setEnabled( BOOL state ) {
-	this->_amEnabled = state;
-	return (this->isEnabled());
+
+BOOL TreeViewItemPlus::setEnabled( BOOL state )
+{
+	_amEnabled = state;
+	return isEnabled();
 }
-BOOL				TreeViewItemPlus::setExtraData( Value* extraDat ) {
-	this->_extraData = extraDat;
+
+BOOL TreeViewItemPlus::setExtraData( Value* extraDat )
+{
+	_extraData = extraDat;
 	return TRUE;
 }
-BOOL				TreeViewItemPlus::setIconImage( int index ) {
+
+BOOL TreeViewItemPlus::setIconImage( int index )
+{
 	BOOL success = TRUE;
-	if ( this->isInitialized() ) {
+	if ( isInitialized() ) {
 		TVITEM tvItem;
-		tvItem.mask			= TVIF_HANDLE | TVIF_PARAM | TVIF_IMAGE;
-		tvItem.hItem		= this->treeItem();
-		tvItem.iImage		= index;
-		tvItem.lParam		= (LPARAM) this;
-
-		success				= TreeView_SetItem( this->control()->window(), &tvItem );
-	}
-
-	if ( success ) 
-		this->_iconImage	= index;
-
-	return success;
-}
-BOOL				TreeViewItemPlus::setIconSelectedImage( int index ) {
-	BOOL success = TRUE;
-	if ( this->isInitialized() ) {
-		TVITEM tvItem;
-		tvItem.mask					= TVIF_HANDLE | TVIF_PARAM | TVIF_SELECTEDIMAGE;
-		tvItem.hItem				= this->treeItem();
-		tvItem.iSelectedImage		= index;
-		tvItem.lParam				= (LPARAM) this;
-		success						= TreeView_SetItem( this->control()->window(), &tvItem );
-	}
-
-	if ( success )
-		this->_iconSelectedImage	= index;
-
-	return success;
-}
-BOOL				TreeViewItemPlus::setIconState( int index ) {
-	BOOL success = TRUE;
-	if ( this->isInitialized() ) {
-		TVITEM tvItem;
-		tvItem.mask					= TVIF_HANDLE | TVIF_PARAM |TVIF_STATE;
-		tvItem.stateMask			= TVIS_OVERLAYMASK;
-		tvItem.state				= (INDEXTOOVERLAYMASK( index ) );
-		tvItem.hItem				= this->treeItem();
-		tvItem.lParam				= (LPARAM) this;
-
-		success						= TreeView_SetItem( this->control()->window(), &tvItem );
-	}
-	if ( success )
-		this->_iconState			= index;
-
-	return success;
-}
-BOOL				TreeViewItemPlus::setName( TSTR newName )		{ 
-	BOOL success = TRUE;
-	if ( this->isInitialized() ) {
-		TVITEM tvItem;
-		tvItem.mask		= TVIF_HANDLE | TVIF_PARAM | TVIF_TEXT;
-		tvItem.hItem	= this->_treeItem;
-		tvItem.pszText	= newName;
+		tvItem.mask		= TVIF_HANDLE | TVIF_PARAM | TVIF_IMAGE;
+		tvItem.hItem	= treeItem();
+		tvItem.iImage	= index;
 		tvItem.lParam	= (LPARAM) this;
 
-		success	= TreeView_SetItem( this->control()->window(), &tvItem );
-		this->control()->invalidate();
+		success = TreeView_SetItem( control()->window(), &tvItem );
 	}
 
 	if ( success )
-		this->_name	= newName;
+		_iconImage	= index;
 
 	return success;
 }
-BOOL				TreeViewItemPlus::setNode( Value* node ) {
-	this->_node = node;
+
+BOOL TreeViewItemPlus::setIconSelectedImage( int index )
+{
+	BOOL success = TRUE;
+	if ( isInitialized() ) {
+		TVITEM tvItem;
+		tvItem.mask				= TVIF_HANDLE | TVIF_PARAM | TVIF_SELECTEDIMAGE;
+		tvItem.hItem			= treeItem();
+		tvItem.iSelectedImage	= index;
+		tvItem.lParam			= (LPARAM) this;
+		success					= TreeView_SetItem( control()->window(), &tvItem );
+	}
+
+	if ( success )
+		_iconSelectedImage	= index;
+
+	return success;
+}
+
+BOOL TreeViewItemPlus::setIconState( int index )
+{
+	BOOL success = TRUE;
+	if ( isInitialized() ) {
+		TVITEM tvItem;
+		tvItem.mask			= TVIF_HANDLE | TVIF_PARAM |TVIF_STATE;
+		tvItem.stateMask	= TVIS_OVERLAYMASK;
+		tvItem.state		= (INDEXTOOVERLAYMASK( index ) );
+		tvItem.hItem		= treeItem();
+		tvItem.lParam		= (LPARAM) this;
+
+		success = TreeView_SetItem( control()->window(), &tvItem );
+	}
+	
+	if ( success )
+		_iconState			= index;
+
+	return success;
+}
+
+BOOL TreeViewItemPlus::setName( TSTR newName )
+{
+	BOOL success = TRUE;
+	if ( isInitialized() ) {
+		TVITEM tvItem;
+		tvItem.mask		= TVIF_HANDLE | TVIF_PARAM | TVIF_TEXT;
+		tvItem.hItem	= _treeItem;
+		tvItem.pszText	= (TCHAR*)(newName.data());
+		tvItem.lParam	= (LPARAM) this;
+
+		success = TreeView_SetItem( control()->window(), &tvItem );
+		control()->invalidate();
+	}
+
+	if ( success )
+		_name	= newName;
+
+	return success;
+}
+
+BOOL TreeViewItemPlus::setNode( Value* node )
+{
+	_node = node;
 	return TRUE;
 }
-BOOL				TreeViewItemPlus::setParent( TreeViewItemPlus* parentItem ) {
+
+BOOL TreeViewItemPlus::setParent( TreeViewItemPlus* parentItem )
+{
 	BOOL success = FALSE;
 	if ( parentItem && is_treeviewitemplus( parentItem ) ) {
 		success = parentItem->addChild( this );
 	}
 	return success;
 }
-BOOL				TreeViewItemPlus::setToolTip( TSTR tip ) {
-	this->_toolTip = tip;
-	this->control()->invalidate();
+
+BOOL TreeViewItemPlus::setToolTip( TSTR tip )
+{
+	_toolTip = tip;
+	control()->invalidate();
 	return TRUE;
 }
-BOOL				TreeViewItemPlus::setSelected( BOOL state, BOOL recursive, BOOL updateUi )		{
+
+BOOL TreeViewItemPlus::setSelected( BOOL state, BOOL recursive, BOOL updateUi )
+{
 	if ( recursive ) {
-		for ( int i = 0; i < this->_children->size; i++ )
-			((TreeViewItemPlus*) this->_children->data[i])->setSelected( state, recursive, FALSE );
+		for ( int i = 0; i < _children->size; i++ )
+			((TreeViewItemPlus*) _children->data[i])->setSelected( state, recursive, FALSE );
 	}
-	if ( this->isEnabled() ) {
-		this->_amSelected = state;
-		if ( updateUi && this->isInitialized() )
-			this->control()->repaint();
+	if ( isEnabled() ) {
+		_amSelected = state;
+		if ( updateUi && isInitialized() )
+			control()->repaint();
 	}
-	return this->_amSelected;
+	return _amSelected;
 }
-Array*				TreeViewItemPlus::siblings() {
+
+Array * TreeViewItemPlus::siblings()
+{
 	init_thread_locals();
 	one_typed_value_local( Array* out );
 
@@ -1557,71 +1610,87 @@ Array*				TreeViewItemPlus::siblings() {
 
 	vl.out	= new Array(0);
 
-	if ( this->_parent ) {
-		for ( int i = 0; i < this->_parent->_children->size; i++ )
-			if ( this->_parent->_children->data[i] != this )
-				vl.out->append( this->_parent->_children->data[i] );
+	if ( _parent ) {
+		for ( int i = 0; i < _parent->_children->size; i++ )
+			if ( _parent->_children->data[i] != this )
+				vl.out->append( _parent->_children->data[i] );
 	}
 
 	pop_alloc_frame();
 
 	return_value( vl.out );
 }
-void				TreeViewItemPlus::sort( BOOL recursive ) {
+
+void TreeViewItemPlus::sort( BOOL recursive )
+{
 	// Sort Tree Items
 	BOOL success = TRUE;
-	for (int i = 0; i < this->_children->size; i++) {
-		TreeViewItemPlus* item = (TreeViewItemPlus*) this->_children->data[i];
+	for (int i = 0; i < _children->size; i++) {
+		TreeViewItemPlus* item = (TreeViewItemPlus*) _children->data[i];
 		if ( is_treeviewitemplus( item ) ) {
-			HTREEITEM hChild	= TreeView_GetChild( this->control()->window(), this->treeItem() );
+			HTREEITEM hChild = TreeView_GetChild( control()->window(), treeItem() );
 
 			TVSORTCB sort;
-			sort.hParent		= hChild ? this->treeItem() : NULL;
-			sort.lParam			= (LPARAM) this->control();
+			sort.hParent		= hChild ? treeItem() : NULL;
+			sort.lParam			= (LPARAM) control();
 			sort.lpfnCompare	= CompareItems;
 
-			success				= success && TreeView_SortChildrenCB( this->control()->window(), &sort, TRUE );
+			success = success && TreeView_SortChildrenCB( control()->window(), &sort, TRUE );
 		}
 	}
 
 	// Sort Data Items
-	this->_children->sort();
+	_children->sort();
 
 	if ( recursive ) {
-		for (int i = 0; i < this->_children->size; i++ )
-			((TreeViewItemPlus*) this->_children->data[i])->sort(recursive);
+		for (int i = 0; i < _children->size; i++ )
+			((TreeViewItemPlus*) _children->data[i])->sort(recursive);
 	}
 }
-BOOL				TreeViewItemPlus::toggleCollapsed() {
-	return TreeView_Expand( this->control()->window(), this->treeItem(), TVE_TOGGLE );
+
+BOOL TreeViewItemPlus::toggleCollapsed()
+{
+	return TreeView_Expand( control()->window(), treeItem(), TVE_TOGGLE );
 }
-TSTR				TreeViewItemPlus::toolTip()				{ return this->_toolTip; }
-HTREEITEM			TreeViewItemPlus::treeItem()			{ return this->_treeItem; }
+
+TSTR TreeViewItemPlus::toolTip() { return _toolTip; }
+
+HTREEITEM TreeViewItemPlus::treeItem() { return _treeItem; }
 
 
 //----------------------------------------------------------------------------------------------------------------
 //									TREEVIEWITEMPLUS: MAXScript Methods
 //----------------------------------------------------------------------------------------------------------------
-void				TreeViewItemPlus::sprin1( CharStream* s ) { s->printf( _T("<TreeViewItemPlus:%s>"), (TCHAR*) this->_name ); }
-void				TreeViewItemPlus::collect() {
-	if ( this->_node )		DeleteObject( this->_node );
-	if ( this->_extraData )	DeleteObject( this->_extraData );
-	if ( this->_data )		DeleteObject( this->_data );
-	if ( this->_children )	DeleteObject( this->_children );
+void TreeViewItemPlus::sprin1( CharStream* s ) { s->printf( _T("<TreeViewItemPlus:%s>"), _name.data() ); }
+
+void TreeViewItemPlus::collect()
+{
+	if ( _node ) DeleteObject( _node );
+	if ( _extraData ) DeleteObject( _extraData );
+	if ( _data ) DeleteObject( _data );
+	if ( _children ) DeleteObject( _children );
 	delete this;
 }
-void				TreeViewItemPlus::gc_trace() {
+
+void TreeViewItemPlus::gc_trace()
+{
 	Value::gc_trace();
 
-	if ( this->_data		&& this->_data->is_not_marked() )		this->_data->gc_trace();
-	if ( this->_extraData	&& this->_extraData->is_not_marked() )	this->_extraData->gc_trace();
-	if ( this->_node		&& this->_node->is_not_marked() )		this->_node->gc_trace();
-	if ( this->_children	&& this->_children->is_not_marked() )	this->_children->gc_trace();
+	if ( _data && _data->is_not_marked() )
+		_data->gc_trace();
+	if ( _extraData && _extraData->is_not_marked() )
+		_extraData->gc_trace();
+	if ( _node && _node->is_not_marked() )
+		_node->gc_trace();
+	if ( _children && _children->is_not_marked() )
+		_children->gc_trace();
 }
-Value*				TreeViewItemPlus::applyMethod( Value* methodID, Value** arg_list, int count, CallContext* cc ) {
+
+Value * TreeViewItemPlus::applyMethod( Value* methodID, Value** arg_list, int count, CallContext* cc )
+{
 	if ( methodID == n_addChild ) {
 		check_arg_count( addChild, 1, count );
-		return ( this->addChild( (TreeViewItemPlus*) arg_list[0] ) ) ? &true_value : &false_value;
+		return ( addChild( (TreeViewItemPlus*) arg_list[0] ) ) ? &true_value : &false_value;
 	}
 	else if ( methodID == n_addItem ) {
 		check_arg_count_with_keys( addItem, 1, count );
@@ -1629,145 +1698,187 @@ Value*				TreeViewItemPlus::applyMethod( Value* methodID, Value** arg_list, int 
 		Value* param	= key_arg( recursive );
 		if ( param != &unsupplied )
 			recursive	= param->to_bool();
-		return this->addItem( arg_list[0], recursive );
+		return addItem( arg_list[0], recursive );
 	}
 	else if ( methodID == n_collapse ) {
 		check_arg_count( collapse, 0, count );
-		return ( this->setCollapsed( TRUE ) ) ? &true_value : &false_value;
+		return ( setCollapsed( TRUE ) ) ? &true_value : &false_value;
 	}
 	else if ( methodID == n_deleteChildren ) {
 		check_arg_count( deleteChildren, 0, count );
-		this->deleteChildren();
+		deleteChildren();
 	}
 	else if ( methodID == n_editLabel ) {
 		check_arg_count( editLabel, 0, count );
-		this->editLabel();
+		editLabel();
 	}
 	else if ( methodID == n_endEditLabel ) {
 		check_arg_count( endEditLabel, 0, count );
-		this->endEditLabel();
+		endEditLabel();
 	}
 	else if ( methodID == n_ensureVisible ) {
 		check_arg_count( ensureVisible, 0, count );
-		return ( this->ensureVisible() ) ? &true_value : &false_value;
+		return ensureVisible() ? &true_value : &false_value;
 	}
 	else if ( methodID == n_expand ) {
 		check_arg_count( expand, 0, count );
-		return ( this->setCollapsed( FALSE ) ) ? &true_value : &false_value;
+		return setCollapsed( FALSE ) ? &true_value : &false_value;
 	}
 	else if ( methodID == n_hasChild ) {
 		check_arg_count( hasChild, 1, count );
-		return ( this->hasChild( (TreeViewItemPlus*) arg_list[0] ) ) ? &true_value : &false_value;
+		return hasChild( (TreeViewItemPlus*) arg_list[0] ) ? &true_value : &false_value;
 	}
 	else if ( methodID == n_isCollapsed ) {
 		check_arg_count( isCollapsed, 0, count );
-		return ( this->isCollapsed() ) ? &true_value : &false_value;
+		return isCollapsed() ? &true_value : &false_value;
 	}
 	else if ( methodID == n_isVisible ) {
 		check_arg_count( isVisible, 0, count );
-		return ( this->isVisible() ) ? &true_value : &false_value;
+		return isVisible() ? &true_value : &false_value;
 	}
 	else if ( methodID == n_itemByData ) {
 		check_arg_count( itemByData, 1, count );
-		return this->itemByData( arg_list[0] );
+		return itemByData( arg_list[0] );
 	}
 	else if ( methodID == n_remove ) {
 		check_arg_count( remove, 0, count );
-		return ( this->remove() ) ? &true_value : &false_value;
+		return remove() ? &true_value : &false_value;
 	}
 	else if ( methodID == n_setCollapsed ) {
 		check_arg_count( setCollapsed, 1, count );
-		return ( this->setCollapsed( arg_list[0]->to_bool() ) ) ? &true_value : &false_value;
+		return setCollapsed( arg_list[0]->to_bool() ) ? &true_value : &false_value;
 	}
 	else if ( methodID == n_setParent ) {
 		check_arg_count( setParent, 1, count );
 		if ( arg_list[0] == &undefined )
-			return ( this->setParent( this->control()->root() ) )		? &true_value : &false_value;
+			return setParent( control()->root() ) ? &true_value : &false_value;
 		if ( is_treeviewitemplus( arg_list[0] ) ) {
-			return ( this->setParent( (TreeViewItemPlus*) arg_list[0] ) )	? &true_value : &false_value;
+			return setParent( (TreeViewItemPlus*) arg_list[0] ) ? &true_value : &false_value;
 		}
 		return &false_value;
 	}
 	else if ( methodID == n_toggleCollapsed ) {
 		check_arg_count( toggleCollapsed, 0, count );
-		return ( this->toggleCollapsed() ) ? &true_value : &false_value;
+		return toggleCollapsed() ? &true_value : &false_value;
 	}
 	else if ( methodID == n_toggleExpand ) {
 		check_arg_count( toggleExpand, 0, count );
-		return ( this->toggleCollapsed() ) ? &true_value : &false_value;
+		return toggleCollapsed() ? &true_value : &false_value;
 	}
 
 	return &ok;
 }
-Value*				TreeViewItemPlus::get_property( Value** arg_list, int count ) {
+
+Value * TreeViewItemPlus::get_property( Value** arg_list, int count )
+{
 	Value* prop = arg_list[0];
 
-	if ( prop == n_addChild )				return NEW_GENERIC_METHOD( addChild );
-	else if ( prop == n_addItem )			return NEW_GENERIC_METHOD( addItem );
-	else if ( prop == n_children )			return this->children(FALSE);
-	else if ( prop == n_collapse )			return NEW_GENERIC_METHOD( collapse );
-	else if ( prop == n_color )				return ColorValue::intern( AColor( this->color() ) );
-	else if ( prop == n_control )	{
-		if ( this->control() )
-			return this->control();
+	if ( prop == n_addChild )
+		return NEW_GENERIC_METHOD( addChild );
+	else if ( prop == n_addItem )
+		return NEW_GENERIC_METHOD( addItem );
+	else if ( prop == n_children )
+		return children(FALSE);
+	else if ( prop == n_collapse )
+		return NEW_GENERIC_METHOD( collapse );
+	else if ( prop == n_color )
+		return ColorValue::intern( AColor( color() ) );
+	else if ( prop == n_control ){
+		if ( control() )
+			return control();
 		return &undefined;
 	}
-	else if ( prop == n_data )				return this->data();
-	else if ( prop == n_deleteChildren )	return NEW_GENERIC_METHOD( deleteChildren );
-	else if ( prop == n_editLabel )			return NEW_GENERIC_METHOD( editLabel );
-	else if ( prop == n_enabled )			return (this->isEnabled()) ? &true_value : &false_value;
-	else if ( prop == n_endEditLabel )		return NEW_GENERIC_METHOD( endEditLabel );
-	else if ( prop == n_ensureVisible )		return NEW_GENERIC_METHOD( ensureVisible );
-	else if ( prop == n_expand )			return NEW_GENERIC_METHOD( expand );
-	else if ( prop == n_extraData )			return this->extraData();
-	else if ( prop == n_hwnd )				return (this->_treeItem) ? IntegerPtr::intern( reinterpret_cast<INT64> (this->_treeItem) ) : &undefined;
-	else if ( prop == n_hasChild )			return NEW_GENERIC_METHOD( hasChild );
-	else if ( prop == n_iconImage )			return Integer::intern( this->iconImage() );
-	else if ( prop == n_iconSelectedImage )	return Integer::intern( this->iconSelectedImage() );
-	else if ( prop == n_iconState )			return Integer::intern( this->iconState() );
-	else if ( prop == n_isCollapsed )		return NEW_GENERIC_METHOD( isCollapsed );
-	else if ( prop == n_isVisible )			return NEW_GENERIC_METHOD( isVisible );
-	else if ( prop == n_itemByData )		return NEW_GENERIC_METHOD( itemByData );
-	else if ( prop == n_setCollapsed )		return NEW_GENERIC_METHOD( setCollapsed );
-	else if ( prop == n_setParent )			return NEW_GENERIC_METHOD( setParent );
-	else if ( prop == n_node )				return this->node();
-	else if ( prop == n_name )				return ( new String( this->name() ) );
-	else if ( prop == n_parent )			{
-		if ( this->parent() )
-			return this->parent();
-		else
-			return &undefined;
+	else if ( prop == n_data )
+		return data();
+	else if ( prop == n_deleteChildren )
+		return NEW_GENERIC_METHOD( deleteChildren );
+	else if ( prop == n_editLabel )
+		return NEW_GENERIC_METHOD( editLabel );
+	else if ( prop == n_enabled )
+		return isEnabled() ? &true_value : &false_value;
+	else if ( prop == n_endEditLabel )
+		return NEW_GENERIC_METHOD( endEditLabel );
+	else if ( prop == n_ensureVisible )
+		return NEW_GENERIC_METHOD( ensureVisible );
+	else if ( prop == n_expand )
+		return NEW_GENERIC_METHOD( expand );
+	else if ( prop == n_extraData )
+		return extraData();
+	else if ( prop == n_hwnd )
+		return _treeItem ? IntegerPtr::intern( reinterpret_cast<INT64> (_treeItem) ) : &undefined;
+	else if ( prop == n_hasChild )
+		return NEW_GENERIC_METHOD( hasChild );
+	else if ( prop == n_iconImage )
+		return Integer::intern( iconImage() );
+	else if ( prop == n_iconSelectedImage )
+		return Integer::intern( iconSelectedImage() );
+	else if ( prop == n_iconState )
+		return Integer::intern( iconState() );
+	else if ( prop == n_isCollapsed )
+		return NEW_GENERIC_METHOD( isCollapsed );
+	else if ( prop == n_isVisible )
+		return NEW_GENERIC_METHOD( isVisible );
+	else if ( prop == n_itemByData )
+		return NEW_GENERIC_METHOD( itemByData );
+	else if ( prop == n_setCollapsed )
+		return NEW_GENERIC_METHOD( setCollapsed );
+	else if ( prop == n_setParent )
+		return NEW_GENERIC_METHOD( setParent );
+	else if ( prop == n_node )
+		return node();
+	else if ( prop == n_name )
+		return new String( name() );
+	else if ( prop == n_parent ) {
+		return parent() ? (Value*)parent() : &undefined;
 	}
-	else if ( prop == n_remove )			return NEW_GENERIC_METHOD( remove );
-	else if ( prop == n_selected )			return (this->isSelected()) ? &true_value : &false_value;
-	else if ( prop == n_siblings )			return this->siblings();
-	else if ( prop == n_toggleCollapsed )	return NEW_GENERIC_METHOD( toggleCollapsed );
-	else if ( prop == n_toggleExpand )		return NEW_GENERIC_METHOD( toggleExpand );
-	else if ( prop == n_toolTip )			return ( new String( this->toolTip() ) );
-	else									throw RuntimeError( "#%s is not a valid property of TreeViewItemPlus", prop->to_string() );
+	else if ( prop == n_remove )
+		return NEW_GENERIC_METHOD( remove );
+	else if ( prop == n_selected )
+		return isSelected() ? &true_value : &false_value;
+	else if ( prop == n_siblings )
+		return siblings();
+	else if ( prop == n_toggleCollapsed )
+		return NEW_GENERIC_METHOD( toggleCollapsed );
+	else if ( prop == n_toggleExpand )
+		return NEW_GENERIC_METHOD( toggleExpand );
+	else if ( prop == n_toolTip )
+		return new String( toolTip() );
+	else
+		throw RuntimeError( _T("#%s is not a valid property of TreeViewItemPlus"), prop->to_string() );
 
 	return &ok;
 }
 
-Value*				TreeViewItemPlus::set_property( Value** arg_list, int count ) {
-	Value* val	= arg_list[0]->eval();
-	Value* prop	= arg_list[1];
+Value * TreeViewItemPlus::set_property( Value** arg_list, int count )
+{
+	Value* val = arg_list[0]->eval();
+	Value* prop = arg_list[1];
 
-	if ( prop == n_color )					return ( this->setColor( val->to_colorref() ) )		? &true_value : &false_value;
-	else if ( prop == n_data )				return ( this->setData( val ) )						? &true_value : &false_value;
-	else if ( prop == n_enabled )			return ( this->setEnabled( val->to_bool() ) )			? &true_value : &false_value;
-	else if ( prop == n_extraData )			return ( this->setExtraData( val ) )					? &true_value : &false_value;
-	else if ( prop == n_iconImage )			return ( this->setIconImage( val->to_int() ) )			? &true_value : &false_value;
-	else if ( prop == n_iconSelectedImage )	return ( this->setIconSelectedImage( val->to_int() ) )	? &true_value : &false_value;
-	else if ( prop == n_name )				return ( this->setName( val->to_string() ) )			? &true_value : &false_value;
-	else if ( prop == n_node )				return ( this->setNode( val ) )						? &true_value : &false_value;
-	else if ( prop == n_selected )			{
-		if ( !this->control()->isMultiSelection() )
-			this->control()->deselectAll();
-		return ( this->setSelected( val->to_bool() ) )			? &true_value : &false_value;
+	if ( prop == n_color )
+		return setColor( val->to_colorref() ) ? &true_value : &false_value;
+	else if ( prop == n_data )
+		return setData( val ) ? &true_value : &false_value;
+	else if ( prop == n_enabled )
+		return setEnabled( val->to_bool() ) ? &true_value : &false_value;
+	else if ( prop == n_extraData )
+		return setExtraData( val ) ? &true_value : &false_value;
+	else if ( prop == n_iconImage )
+		return setIconImage( val->to_int() ) ? &true_value : &false_value;
+	else if ( prop == n_iconSelectedImage )
+		return setIconSelectedImage( val->to_int() ) ? &true_value : &false_value;
+	else if ( prop == n_name )
+		return setName( val->to_string() ) ? &true_value : &false_value;
+	else if ( prop == n_node )
+		return setNode( val ) ? &true_value : &false_value;
+	else if ( prop == n_selected ) {
+		if ( !control()->isMultiSelection() )
+			control()->deselectAll();
+		return setSelected( val->to_bool() ) ? &true_value : &false_value;
 	}
-	else if ( prop == n_toolTip )			return ( this->setToolTip( val->to_string() ) )		? &true_value : &false_value;
-	else									throw RuntimeError( _T( "#% is not a valid property of TreeViewItemPlus" ), prop->to_string() );
+	else if ( prop == n_toolTip )
+		return setToolTip( val->to_string() ) ? &true_value : &false_value;
+	else
+		throw RuntimeError( _T( "#% is not a valid property of TreeViewItemPlus" ), prop->to_string() );
 
 	return &ok;
 }
@@ -1776,7 +1887,8 @@ Value*				TreeViewItemPlus::set_property( Value** arg_list, int count ) {
 //									TREEVIEWPLUS: Initialize
 //----------------------------------------------------------------------------------------------------------------
 
-void TreeViewPlusInit() {
+void TreeViewPlusInit()
+{
 	static BOOL registered = FALSE;
 	if ( !registered ) {
 		WNDCLASSEX wcex;
@@ -1797,5 +1909,5 @@ void TreeViewPlusInit() {
 			registered		= TRUE;
 	}
 	if ( registered )
-		install_rollout_control( Name::intern( "TreeViewPlus" ), TreeViewPlus::create );
+		install_rollout_control( Name::intern( _T("TreeViewPlus") ), TreeViewPlus::create );
 }

@@ -54,37 +54,15 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 //*****************************************************************************
 
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\maxscript.h"
-#include "maxscript\maxwrapper\bitmaps.h"
-#include "maxscript\foundation\numbers.h"
-#include "maxscript\foundation\colors.h"
-#include "maxscript\foundation\3dmath.h"
-#include "maxscript\compiler\parser.h"
-#else
-#include "MAXScrpt.h"
-#include "BitMaps.h"
-#include "Numbers.h"
-#include "ColorVal.h"
-#include "3DMath.h"
-#include "Parser.h"
-#endif
 //#include "MXSAgni.h"
+
+
+#include "imports.h"
+#include "resource.h"
 
 extern HINSTANCE g_hInst;
 
-#include "resource.h"
 
-#ifdef ScripterExport
-	#undef ScripterExport
-#endif
-#define ScripterExport __declspec( dllexport )
-
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\macros\define_external_functions.h"
-#else
-#include "defextfn.h"
-#endif
 	def_name ( click )
 	def_name ( dblclick )
 	def_name ( mousedown )
@@ -137,7 +115,7 @@ public:
 	~ButtonTag();
 
 	int SetBitmap(Value *val);
-	void SetText(TCHAR *text);
+	void SetText(const TCHAR *text);
 	void SetFont(TCHAR *nameFont, float size, BOOL bold);
 
 	TOOLINFO* GetToolInfo();
@@ -215,7 +193,7 @@ TOOLINFO* ButtonTag::GetToolInfo()
 	ti.cbSize = sizeof(TOOLINFO);
 	ti.hwnd = m_hWnd;
 	ti.uId = TOOLTIP_ID;
-	ti.lpszText = (LPSTR)m_sToolTip;
+	ti.lpszText = (TCHAR*)(m_sToolTip.data());
 	GetClientRect(m_hWnd, &ti.rect);
 
 	return &ti;
@@ -296,7 +274,7 @@ void ButtonTag::SetFont(TCHAR *nameFont, float size, BOOL bold)
 	GetObject(m_hFont, sizeof(LOGFONT), &lf);
 
 	// request a face name "Arial"
-	strcpy(lf.lfFaceName, nameFont);
+	_tcscpy(lf.lfFaceName, nameFont);
 
 	// request pixel-height font
 	lf.lfHeight = size; 
@@ -312,7 +290,7 @@ void ButtonTag::SetFont(TCHAR *nameFont, float size, BOOL bold)
 }
 
 // ============================================================================
-void ButtonTag::SetText(TCHAR *text)
+void ButtonTag::SetText(const TCHAR *text)
 {
 	SetWindowText(m_hWnd, text);
 	Invalidate();
@@ -325,7 +303,7 @@ void ButtonTag::add_control(Rollout *ro, HWND parent, HINSTANCE hInstance, int& 
 {
 	caption = caption->eval();
 
-	TCHAR *text = caption->eval()->to_string();
+	const TCHAR *text = caption->eval()->to_string();
 	control_ID = next_id();
 	parent_rollout = ro;
 
@@ -509,7 +487,7 @@ Value* ButtonTag::set_property(Value** arg_list, int count)
 
 	else if (prop == n_text || prop == n_caption) // not displayed
 	{
-		TCHAR *text = val->to_string(); // will throw error if not convertable
+		const TCHAR *text = val->to_string(); // will throw error if not convertable
 		SetText(val->to_string());
 		caption = val->get_heap_ptr();
 	}
@@ -535,11 +513,11 @@ void ButtonTag::set_enable()
 void ButtonTagInit()
 {
 
-	#ifdef __MAXSCRIPT_2012__
-	#include "maxscript\macros\define_implementations.h"
-	#else
+#if __MAXSCRIPT_2012__ || __MAXSCRIPT_2013__
+	#include "macros/define_implementations.h"
+#else
 	#include "defimpfn.h"
-	#endif
+#endif
 	def_name ( click )
 	def_name ( dblclick )
 	def_name ( mousedown )
@@ -555,7 +533,7 @@ void ButtonTagInit()
 	def_name ( rmouseup )
 	def_name ( fontName )
 
-	install_rollout_control(Name::intern("SimpleButton"), ButtonTag::create);
+	install_rollout_control(Name::intern(_T("SimpleButton")), ButtonTag::create);
 }
 
 

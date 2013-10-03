@@ -46,13 +46,7 @@
 #ifndef _GENERICMETHOD_H_
 #define _GENERICMETHOD_H_
 
-#ifdef __MAXSCRIPT_2012__
-#include "maxscript\maxscript.h"
-#include "maxscript\foundation\structs.h"
-#else
-#include "MAXScrpt.h"
-#include "structs.h"
-#endif
+#include "imports.h"
 #include "resource.h"
 
 #define			NEW_GENERIC_METHOD( methodName )			( new GenericMethod( this, Name::intern( _T( #methodName ) ) ) )
