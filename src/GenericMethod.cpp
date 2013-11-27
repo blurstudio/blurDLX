@@ -56,8 +56,11 @@
 #include "definsfn.h"
 #endif
 
+visible_class_instance(AppliedValue,"AppliedValue")
 
-AppliedValue::AppliedValue() {
+AppliedValue::AppliedValue()
+{
+	tag = class_tag(AppliedValue);
 }
 
 void AppliedValue::sprin1(CharStream* s)
@@ -70,10 +73,16 @@ void AppliedValue::gc_trace()
 
 //----------------------------------------------------------------------------------------------------
 
-AppliedControl::AppliedControl( Value* name, Value* caption, Value** keyparms, int keyparm_count ) : RolloutControl( name, caption, keyparms, keyparm_count ) {
+visible_class_instance(AppliedControl,"AppliedControl")
+
+AppliedControl::AppliedControl( Value* name, Value* caption, Value** keyparms, int keyparm_count )
+: RolloutControl( name, caption, keyparms, keyparm_count )
+{
+	tag = class_tag(AppliedControl);
 }
 
-void AppliedControl::sprin1(CharStream* s) {
+void AppliedControl::sprin1(CharStream* s)
+{
 	s->puts( _T( "AppliedControl" ) );
 }
 
@@ -81,10 +90,13 @@ void AppliedControl::gc_trace() { RolloutControl::gc_trace(); }
 
 //----------------------------------------------------------------------------------------------------
 
+visible_class_instance(GenericMethod,"GenericMethod")
+
 GenericMethod::GenericMethod( AppliedValue* target, Value* methodID )
+: target(target)
+, methodID(methodID)
 {
-	target	= target;
-	methodID	= methodID;
+	tag = class_tag(GenericMethod);
 }
 
 GenericMethod::~GenericMethod()
@@ -94,7 +106,7 @@ void GenericMethod::gc_trace()
 {
 	Value::gc_trace();
 
-	if (target	&& target->is_not_marked())
+	if (target && target->is_not_marked())
 		target->gc_trace();
 	if (methodID && methodID->is_not_marked())
 		methodID->gc_trace();
@@ -130,10 +142,13 @@ Value * GenericMethod::apply(Value** arg_list, int count, CallContext* cc)
 
 //----------------------------------------------------------------------------------------------------
 
+visible_class_instance(GenericControlMethod,"GenericControlMethod")
+
 GenericControlMethod::GenericControlMethod( AppliedControl* target, Value* methodID )
+: target(target)
+, methodID(methodID)
 {
-	target	= target;
-	methodID	= methodID;
+	tag = class_tag(GenericControlMethod);
 }
 
 GenericControlMethod::~GenericControlMethod()
@@ -141,10 +156,13 @@ GenericControlMethod::~GenericControlMethod()
 
 void GenericControlMethod::gc_trace()
 {
+	mprintf( _T("GenericControlMethod::gc_trace()\n") );
 	Value::gc_trace();
 
-	if (target && target->is_not_marked())		target->gc_trace();
-	if (methodID && methodID->is_not_marked())	methodID->gc_trace();
+	if (target && target->is_not_marked())
+		target->gc_trace();
+	if (methodID && methodID->is_not_marked())
+		methodID->gc_trace();
 }
 
 void GenericControlMethod::sprin1(CharStream* s)
@@ -158,6 +176,14 @@ void GenericControlMethod::sprin1(CharStream* s)
 }
 
 Value* GenericControlMethod::apply(Value** arg_list, int count, CallContext* cc)
+{
+	if( count == 0 ) {
+		return target->applyMethod( methodID, 0, 0, cc );
+	}
+	return applyArgs(arg_list,count,cc);
+}
+
+Value* GenericControlMethod::applyArgs(Value** arg_list, int count, CallContext* cc)
 {
 	init_thread_locals();
 	push_alloc_frame();

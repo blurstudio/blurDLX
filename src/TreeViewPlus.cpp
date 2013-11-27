@@ -570,8 +570,8 @@ BOOL				TreeViewPlus::repaint()								{
 TreeViewItemPlus*	TreeViewPlus::root()									{ return this->_root; }
 COLORREF			TreeViewPlus::selectedColor()							{ return this->_selectedColor; }
 Array*				TreeViewPlus::selectedItems()						{
-	//init_thread_locals();
-	//push_alloc_frame();
+	init_thread_locals();
+	push_alloc_frame();
 	one_typed_value_local(Array* out);
 	vl.out				= new Array(0);
 	Array* children		= this->root()->children(TRUE);
@@ -580,7 +580,7 @@ Array*				TreeViewPlus::selectedItems()						{
 			vl.out->append( children->data[i] );
 	}
 
-	//pop_alloc_frame();
+	pop_alloc_frame();
 	return_value( vl.out );
 }
 BOOL				TreeViewPlus::setBkColor( COLORREF newBkColor ) {
@@ -985,37 +985,68 @@ Value*				TreeViewPlus::applyMethod( Value* methodID, Value** arg_list, int coun
 
 	return &ok;
 }
-Value*				TreeViewPlus::get_property( Value** arg_list, int count ) {
-	Value*		prop = arg_list[0]->eval();
+Value * TreeViewPlus::get_property( Value** arg_list, int count )
+{
+	init_thread_locals();
+	push_alloc_frame();
+	one_value_local(result);
+	Value*		prop = arg_list[0];//->eval();
 
-	if		( prop == n_addItem )			{ return NEW_CONTROL_METHOD( addItem ); }
-	else if ( prop == n_autoCollapse )		{ return ( this->isAutoCollapsible() ) ? &true_value : &false_value; }
-	else if ( prop == n_bkColor )			{ return ColorValue::intern( AColor( this->bkColor() ) ); }
-	else if ( prop == n_data )				{ return this->data(); }
-	else if ( prop == n_deleteAllItems )	{ return NEW_CONTROL_METHOD( deleteAllItems ); }
-	else if ( prop == n_deselectAll )		{ return NEW_CONTROL_METHOD( deselectAll ); }
-	else if ( prop == n_dragEnabled )		{ return ( this->isDragEnabled() )				? &true_value : &false_value; }
-	else if ( prop == n_hwnd )				{ return ( this->parent_rollout && this->parent_rollout->page ) ? IntegerPtr::intern( reinterpret_cast<INT64>( this->_treeWindow ) ) : &undefined; }
-	else if ( prop == n_height )			{ return Integer::intern( this->height() ); }
-	else if ( prop == n_editLabels )		{ return ( this->isLabelEditingEnabled() )		? &true_value : &false_value; }
-	else if ( prop == n_itemByData )		{ return NEW_CONTROL_METHOD( itemByData ); }
-	else if ( prop == n_items )				{ return ( this->root() ) ? this->root()->children() : new Array(0); }
-	else if ( prop == n_multiSelection )	{ return ( this->isMultiSelection() )			? &true_value : &false_value; }
-	else if ( prop == n_repaint )			{ return NEW_CONTROL_METHOD( repaint ); }
-	else if ( prop == n_root )				{ return this->root(); }
-	else if ( prop == n_selectedColor )		{ return ColorValue::intern( AColor( this->selectedColor() ) ); }
-	else if ( prop == n_selectedItems )		{ return NEW_CONTROL_METHOD( selectedItems ); }
-	else if ( prop == n_setCompareMethod )	{ return NEW_CONTROL_METHOD( setCompareMethod ); }
-	else if ( prop == n_sort )				{ return NEW_CONTROL_METHOD( sort ); }
-	else if ( prop == n_sortingEnabled )	{ return ( this->isSortingEnabled())			? &true_value : &false_value; }
-	else if ( prop == n_sortingInverted )	{ return ( this->isSortingInverted() )			? &true_value : &false_value; }
-	else if ( prop == n_syncSelection )		{ return ( this->isSelectionSynced() )			? &true_value : &false_value; }
-	else if ( prop == n_useSelectedColor )	{ return ( this->isUsingSelectedColor() )		? &true_value : &false_value; }
-	else if ( prop == n_width )				{ return Integer::intern( this->width() );}
-	else									{ return RolloutControl::get_property( arg_list, count ); }
+	if ( prop == n_addItem )
+		vl.result = NEW_CONTROL_METHOD( addItem );
+	else if ( prop == n_autoCollapse )
+		vl.result = isAutoCollapsible() ? &true_value : &false_value;
+	else if ( prop == n_bkColor )
+		vl.result = ColorValue::intern( AColor( bkColor() ) );
+	else if ( prop == n_data )
+		vl.result = data();
+	else if ( prop == n_deleteAllItems )
+		vl.result = NEW_CONTROL_METHOD( deleteAllItems );
+	else if ( prop == n_deselectAll )
+		vl.result = NEW_CONTROL_METHOD( deselectAll );
+	else if ( prop == n_dragEnabled )
+		vl.result = isDragEnabled() ? &true_value : &false_value;
+	else if ( prop == n_hwnd )
+		vl.result = parent_rollout && parent_rollout->page ? IntegerPtr::intern( reinterpret_cast<INT64>( _treeWindow ) ) : &undefined;
+	else if ( prop == n_height )
+		vl.result = Integer::intern( height() );
+	else if ( prop == n_editLabels )
+		vl.result = isLabelEditingEnabled() ? &true_value : &false_value;
+	else if ( prop == n_itemByData )
+		vl.result = NEW_CONTROL_METHOD( itemByData );
+	else if ( prop == n_items )
+		vl.result = root() ? root()->children() : new Array(0);
+	else if ( prop == n_multiSelection )
+		vl.result = isMultiSelection() ? &true_value : &false_value;
+	else if ( prop == n_repaint )
+		vl.result = NEW_CONTROL_METHOD( repaint );
+	else if ( prop == n_root )
+		vl.result = root();
+	else if ( prop == n_selectedColor )
+		vl.result = ColorValue::intern( AColor( selectedColor() ) );
+	else if ( prop == n_selectedItems )
+		vl.result = NEW_CONTROL_METHOD( selectedItems );
+	else if ( prop == n_setCompareMethod )
+		vl.result = NEW_CONTROL_METHOD( setCompareMethod );
+	else if ( prop == n_sort )
+		vl.result = NEW_CONTROL_METHOD( sort );
+	else if ( prop == n_sortingEnabled )
+		vl.result = isSortingEnabled() ? &true_value : &false_value;
+	else if ( prop == n_sortingInverted )
+		vl.result = isSortingInverted() ? &true_value : &false_value;
+	else if ( prop == n_syncSelection )
+		vl.result = isSelectionSynced() ? &true_value : &false_value;
+	else if ( prop == n_useSelectedColor )
+		vl.result = isUsingSelectedColor() ? &true_value : &false_value;
+	else if ( prop == n_width )
+		vl.result = Integer::intern( width() );
+	else
+		vl.result = RolloutControl::get_property( arg_list, count );
 
-	return &undefined;
+	pop_alloc_frame();
+	return_value(vl.result);
 }
+
 BOOL				TreeViewPlus::handle_message( Rollout* ro, UINT message, WPARAM wParam, LPARAM lParam )	{ return FALSE; }
 void				TreeViewPlus::set_enable() {
 	if ( this->parent_rollout != NULL && this->parent_rollout->page != NULL ) {

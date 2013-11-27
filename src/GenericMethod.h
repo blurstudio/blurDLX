@@ -52,9 +52,12 @@
 #define			NEW_GENERIC_METHOD( methodName )			( new GenericMethod( this, Name::intern( _T( #methodName ) ) ) )
 #define			NEW_CONTROL_METHOD( methodName )			( new GenericControlMethod( this, Name::intern( _T( #methodName ) ) ) )
 
+visible_class(AppliedValue)
+
 class AppliedValue : public Value {
 	public:
 								AppliedValue();
+			classof_methods (AppliedValue, Value);
 
 		void					collect() { delete this; }
 		void					sprin1(CharStream* s);
@@ -63,9 +66,12 @@ class AppliedValue : public Value {
 		virtual Value*			applyMethod( Value* methodID, Value** arg_list, int count, CallContext* cc ) = 0;
 };
 
+visible_class(AppliedControl)
+
 class AppliedControl : public RolloutControl {
 	public:
 								AppliedControl( Value* name, Value* caption, Value** keyparms, int keyparm_count );
+			classof_methods (AppliedControl, Value);
 
 		void					collect() { delete this; }
 		void					sprin1( CharStream* s );
@@ -74,10 +80,13 @@ class AppliedControl : public RolloutControl {
 		virtual Value*			applyMethod( Value* methodID, Value** arg_list, int count, CallContext* cc ) = 0;
 };
 
+visible_class(GenericMethod)
+
 class GenericMethod : public Value {
 	public:
 		AppliedValue*			target;
 		Value*					methodID;
+			classof_methods (GenericMethod, Value);
 
 								GenericMethod(AppliedValue* target, Value* methodID);
 								~GenericMethod();
@@ -90,10 +99,13 @@ class GenericMethod : public Value {
 
 };
 
+visible_class(GenericControlMethod)
+
 class GenericControlMethod : public Value {
 	public:
 		AppliedControl*	target;
 		Value*					methodID;
+			classof_methods (GenericControlMethod, Value);
 		
 								GenericControlMethod( AppliedControl* target, Value* methodID );
 								~GenericControlMethod();
@@ -102,6 +114,8 @@ class GenericControlMethod : public Value {
 		void					sprin1( CharStream* s );
 		void					gc_trace();
 		Value*					apply( Value** arg_list, int count, CallContext* cc );
+		Value*					applyArgs( Value** arg_list, int count, CallContext* cc );
+		
 };
 
 #endif _GENERICMETHOD_H_
