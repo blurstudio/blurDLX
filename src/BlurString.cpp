@@ -119,17 +119,17 @@ void replace( TSTR &source, const TSTR & _searchString, const TSTR & replaceStri
 		searchString.toUpper();
 	}
 
-    assert( searchString != replaceString );
-
-	for( int i = 0, end = strTmp.Length(); i < end; ) {
-		if( matches( strTmp, searchString, i ) ) {
-			int end = i + searchString.Length();
-			source = source.Substr( 0, i ) + replaceString + source.Substr( end, source.Length() - end );
-			if( !replaceAll )
-				break;
-			i += searchString.Length();
-		} else
-			++i;
+	if( searchString != replaceString ) {
+		for( int i = 0, end = strTmp.Length(); i < end; ) {
+			if( matches( strTmp, searchString, i ) ) {
+				int end = i + searchString.Length();
+				source = source.Substr( 0, i ) + replaceString + source.Substr( end, source.Length() - end );
+				if( !replaceAll )
+					break;
+				i += searchString.Length();
+			} else
+				++i;
+		}
 	}
 }
 
