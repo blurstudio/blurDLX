@@ -107,6 +107,7 @@ void range_check( int val, int lower, int upper, TCHAR * desc )
 
 #define n_caption Name::intern( _T("caption") )
 #define n_refresh Name::intern( _T("refresh") )
+#define n_forceNew Name::intern( _T("forceNew") )
 
 // uniqueId
 #define BLURDLX_CLASS_ID 0x000001
@@ -288,16 +289,19 @@ ulong GenUniqueId()
 	return (a^b);
 }
 
-ulong GetUniqueId( ReferenceTarget* targ )
+ulong GetUniqueId( ReferenceTarget* targ, Value* forceNew)
 {
 	AppDataChunk *ad		= targ->GetAppDataChunk(Class_ID(BLURDLX_CLASS_ID,0), CUST_ATTRIB_CLASS_ID, UNIQUE_ID_INDEX);
 
 	// If the unique id has not been set, then set it to a new unique id
-	if ( !ad ) {
+	if ( !ad || forceNew == &true_value ) {
 		ulong newId		= GenUniqueId();
 		int size		= static_cast<int>( sizeof(ulong) );
 		ulong* pNewId = (ulong*)MAX_malloc(sizeof(ulong));
 		*pNewId = newId;
+		if ( ad ) {
+			targ->RemoveAppDataChunk(Class_ID(BLURDLX_CLASS_ID,0), CUST_ATTRIB_CLASS_ID, UNIQUE_ID_INDEX);
+		}
 		targ->AddAppDataChunk( Class_ID(BLURDLX_CLASS_ID,0), CUST_ATTRIB_CLASS_ID, UNIQUE_ID_INDEX, size, pNewId );
 		return newId;
 	}
@@ -808,12 +812,18 @@ Value * refByUniqueName_cf( Value** arg_list, int count )
 
 Value * uniqueId_cf( Value** arg_list, int count )
 {
-	check_arg_count_with_keys( blurUtil.unqiueId, 1, count );
+	check_arg_count_with_keys( blurUtil.uniqueId, 1, count );
 	ReferenceTarget* targ;
+	Value* forceNewId;
+	if ( key_arg_or_default(forceNew, &false_value) == &true_value ) {
+		forceNewId = &true_value;
+	}
+	else {
+		forceNewId = &false_value;
+	}
 
 	if ( arg_list[0] == &undefined)
 		return Integer::intern(0);
-
 	if ( is_node(arg_list[0]) )
 		targ = arg_list[0]->eval()->to_node();
 	else if ( arg_list[0]->is_kind_of( class_tag(MAXMaterial) ) )
@@ -823,7 +833,7 @@ Value * uniqueId_cf( Value** arg_list, int count )
 	else
 		targ = arg_list[0]->eval()->to_reftarg();
 
-	return Integer::intern( GetUniqueId( targ ) );
+	return Integer::intern( GetUniqueId( targ, forceNewId ) );
 }
 
 // Windows Methods
